@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.virginia.sde.reviews.CourseSearchController">
+    <TextField fx:id="subjectField" promptText="Search by Subject (e.g., CS)" />
+    <TextField fx:id="numberField" promptText="Search by Course Number (e.g., 3140)" />
+    <TextField fx:id="titleField" promptText="Search by Course Title" />
+    <Button fx:id="searchButton" text="Search" onAction="#handleSearch" />
+
+    <TableView fx:id="courseTable">
+        <columns>
+            <TableColumn fx:id="subjectColumn" text="Subject" />
+            <TableColumn fx:id="numberColumn" text="Number" />
+            <TableColumn fx:id="titleColumn" text="Title" />
+            <TableColumn fx:id="ratingColumn" text="Average Rating" />
+        </columns>
+    </TableView>
+
+    <Button fx:id="addCourseButton" text="Add Course" onAction="#handleAddCourse" />
+    <Button fx:id="myReviewsButton" text="My Reviews" onAction="#handleMyReviews" />
+    <Button fx:id="logoutButton" text="Log Out" onAction="#handleLogout" />
+</VBox>
