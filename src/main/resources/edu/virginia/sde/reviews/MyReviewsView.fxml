@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.virginia.sde.controller.MyReviewsController">
+    <Label text="My Reviews" style="-fx-font-size: 20px;" />
+    <TableView fx:id="reviewsTable">
+        <columns>
+            <TableColumn fx:id="courseColumn" text="Course" />
+            <TableColumn fx:id="ratingColumn" text="Rating" />
+            <TableColumn fx:id="commentColumn" text="Comment" />
+        </columns>
+    </TableView>
+    <Button fx:id="backButton" text="Back" onAction="#handleBack" />
+</VBox>

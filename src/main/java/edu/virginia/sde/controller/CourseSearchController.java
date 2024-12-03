@@ -51,13 +51,13 @@ public class CourseSearchController {
 
     @FXML
     public void handleSearch(ActionEvent event) {
-        String subject = subjectField.getText();
-        String number = numberField.getText();
-        String title = titleField.getText();
-
-        List<Course> courses = courseService.searchCourses(subject, number, title);
-        updateCourseTable(courses);
+        String subject = subjectField.getText().trim();
+        String number = numberField.getText().trim();
+        String title = titleField.getText().trim();
+        List<Course> filteredCourses = courseService.searchCourses(subject, number, title);
+        updateCourseTable(filteredCourses);
     }
+
 
     @FXML
     public void handleAddCourse(ActionEvent event) {
@@ -142,4 +142,5 @@ public class CourseSearchController {
         ObservableList<Course> courseList = FXCollections.observableArrayList(courses);
         courseTable.setItems(courseList);
     }
+
 }
