@@ -2,7 +2,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.virginia.sde.reviews.CourseSearchController">
+<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.virginia.sde.controller.CourseSearchController">
     <TextField fx:id="subjectField" promptText="Search by Subject (e.g., CS)" />
     <TextField fx:id="numberField" promptText="Search by Course Number (e.g., 3140)" />
     <TextField fx:id="titleField" promptText="Search by Course Title" />
