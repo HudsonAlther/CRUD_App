@@ -2,7 +2,7 @@ package edu.virginia.sde.controller;
 
 import edu.virginia.sde.model.Review;
 import edu.virginia.sde.service.ReviewService;
-import edu.virginia.sde.service.impl.ReviewServiceImpl;
+import edu.virginia.sde.service.ReviewServiceImpl;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
