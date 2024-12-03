@@ -7,32 +7,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CourseServiceImpl implements CourseService {
-
-    // Placeholder for actual database integration
     private final List<Course> courses = new ArrayList<>();
 
     @Override
     public List<Course> getAllCourses() {
-        return courses; // Would be retrieved from the database
+        return new ArrayList<>(courses);
     }
 
     @Override
     public List<Course> searchCourses(String subject, String number, String title) {
-        // Simulated search logic - to be replaced with actual database search logic
-        List<Course> result = new ArrayList<>();
+        List<Course> results = new ArrayList<>();
         for (Course course : courses) {
-            boolean matches = (subject.isEmpty() || course.subjectProperty().get().contains(subject)) &&
-                    (number.isEmpty() || String.valueOf(course.numberProperty().get()).contains(number)) &&
-                    (title.isEmpty() || course.titleProperty().get().contains(title));
-            if (matches) {
-                result.add(course);
+            if ((subject == null || course.subjectProperty().get().equalsIgnoreCase(subject)) &&
+                    (number == null || Integer.toString(course.numberProperty().get()).equalsIgnoreCase(number)) &&
+                    (title == null || course.titleProperty().get().toLowerCase().contains(title.toLowerCase()))) {
+                results.add(course);
             }
         }
-        return result;
+        return results;
     }
 
     @Override
     public boolean addCourse(Course course) {
-        return courses.add(course);
+        if (courses.contains(course)) {
+            return false;
+        }
+        courses.add(course);
+        return true;
+    }
+
+    @Override
+    public Course getCourseById(int courseId) {
+        for (Course course : courses) {
+            if (course.numberProperty().get() == courseId) {
+                return course;
+            }
+        }
+        return null;
     }
 }

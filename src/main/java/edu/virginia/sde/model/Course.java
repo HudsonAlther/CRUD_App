@@ -30,4 +30,36 @@ public class Course {
     public DoubleProperty averageRatingProperty() {
         return averageRating;
     }
+
+    public String getSubject() {
+        return subject.get();
+    }
+
+    public void setSubject(String subject) {
+        this.subject.set(subject);
+    }
+
+    public int getNumber() {
+        return number.get();
+    }
+
+    public void setNumber(int number) {
+        this.number.set(number);
+    }
+
+    public String getTitle() {
+        return title.get();
+    }
+
+    public void setTitle(String title) {
+        this.title.set(title);
+    }
+
+    public double getAverageRating() {
+        return averageRating.get();
+    }
+
+    public void setAverageRating(double averageRating) {
+        this.averageRating.set(averageRating);
+    }
 }
