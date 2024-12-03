@@ -2,11 +2,8 @@ package edu.virginia.sde.service;
 import edu.virginia.sde.model.Course;
 import edu.virginia.sde.model.Review;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import static edu.virginia.sde.service.UserServiceImpl.DB_URL;
 
 public interface CourseService {
     List<Course> getAllCourses();
@@ -36,21 +33,9 @@ public interface CourseService {
 
         @Override
         public boolean updateReview(Review review) {
-            String query = "UPDATE reviews SET rating = ?, comment = ?, timestamp = ? WHERE review_id = ?";
-            try (Connection connection = DriverManager.getConnection(DB_URL);
-                 PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-                preparedStatement.setInt(1, review.getRating());
-                preparedStatement.setString(2, review.getComment());
-                preparedStatement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
-                preparedStatement.setInt(4, review.getReviewId());
-
-                return preparedStatement.executeUpdate() > 0;
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return false;
-            }
+            // Placeholder implementation
+            return true;
         }
-
 
         @Override
         public boolean deleteReview(Review review) {
