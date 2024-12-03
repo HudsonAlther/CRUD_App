@@ -115,7 +115,7 @@ public class CourseSearchController {
     @FXML
     public void handleMyReviews(ActionEvent event) {
         try {
-            Parent myReviewsRoot = FXMLLoader.load(getClass().getResource("/edu/virginia/sde/hw6/gui/MyReviewsView.fxml"));
+            Parent myReviewsRoot = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/edu/virginia/sde/resources/MyReviewsView.fxml")));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(myReviewsRoot, 600, 400));
             stage.setTitle("My Reviews");

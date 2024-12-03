@@ -1,4 +1,5 @@
 package edu.virginia.sde.controller;
+
 import edu.virginia.sde.service.UserService;
 import edu.virginia.sde.service.UserServiceImpl;
 import javafx.event.ActionEvent;
@@ -7,12 +8,17 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.stage.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+
 import java.io.IOException;
 import java.util.Objects;
 
 public class LoginController {
+
     @FXML
     private TextField usernameField;
     @FXML
@@ -38,7 +44,7 @@ public class LoginController {
         if (isValidUser) {
             errorMessage.setText("Login successful!");
             try {
-                Parent courseSearchRoot = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/edu/virginia/sde/hw6/gui/CourseReviewsView.fxml")));
+                Parent courseSearchRoot = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/edu/virginia/sde/resources/CourseReviewsView.fxml")));
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(courseSearchRoot, 600, 400));
                 stage.setTitle("Course Reviews Application - Course Search");

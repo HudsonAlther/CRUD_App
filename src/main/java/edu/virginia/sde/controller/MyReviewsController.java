@@ -17,6 +17,7 @@ import javafx.fxml.FXMLLoader;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 public class MyReviewsController {
 
@@ -45,7 +46,7 @@ public class MyReviewsController {
     @FXML
     public void handleBack(ActionEvent event) {
         try {
-            Parent courseSearchRoot = FXMLLoader.load(getClass().getResource("/edu/virginia/sde/hw6/gui/CourseSearchView.fxml"));
+            Parent courseSearchRoot = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/edu/virginia/sde/resources/CourseSearchView.fxml")));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(courseSearchRoot, 600, 400));
             stage.setTitle("Course Search");
