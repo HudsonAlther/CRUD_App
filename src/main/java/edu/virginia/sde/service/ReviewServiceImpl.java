@@ -1,4 +1,4 @@
-package edu.virginia.sde.service.impl;
+package edu.virginia.sde.service;
 
 import edu.virginia.sde.model.Review;
 import edu.virginia.sde.service.ReviewService;
