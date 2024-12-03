@@ -3,10 +3,18 @@ import edu.virginia.sde.service.UserService;
 import edu.virginia.sde.service.UserServiceImpl;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.util.Objects;
 
 public class LoginController {
     @FXML
@@ -33,7 +41,16 @@ public class LoginController {
         boolean isValidUser = userService.validateUser(username, password);
         if (isValidUser) {
             errorMessage.setText("Login successful!");
-            // TODO: Transition to the next scene
+            try {
+                Parent courseSearchRoot = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/edu/virginia/sde/hw6/gui/CourseReviewsView.fxml")));
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new Scene(courseSearchRoot, 600, 400));
+                stage.setTitle("Course Reviews Application - Course Search");
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                errorMessage.setText("Failed to load the next scene.");
+            }
         } else {
             errorMessage.setText("Invalid username or password.");
         }
