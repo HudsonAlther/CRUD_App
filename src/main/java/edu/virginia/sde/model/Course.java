@@ -1,5 +1,4 @@
 package edu.virginia.sde.model;
-
 import javafx.beans.property.*;
 
 public class Course {
@@ -61,5 +60,25 @@ public class Course {
 
     public void setAverageRating(double averageRating) {
         this.averageRating.set(averageRating);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Course course = (Course) o;
+
+        return number.get() == course.number.get() &&
+                subject.get().equalsIgnoreCase(course.subject.get()) &&
+                title.get().equalsIgnoreCase(course.title.get());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = subject.get().toLowerCase().hashCode();
+        result = 31 * result + number.get();
+        result = 31 * result + title.get().toLowerCase().hashCode();
+        return result;
     }
 }

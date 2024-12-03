@@ -16,23 +16,51 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public List<Course> searchCourses(String subject, String number, String title) {
+        if (subject != null) subject = subject.trim();
+        if (number != null) number = number.trim();
+        if (title != null) title = title.trim();
+
         List<Course> results = new ArrayList<>();
         for (Course course : courses) {
-            if ((subject == null || course.subjectProperty().get().equalsIgnoreCase(subject)) &&
-                    (number == null || Integer.toString(course.numberProperty().get()).equalsIgnoreCase(number)) &&
-                    (title == null || course.titleProperty().get().toLowerCase().contains(title.toLowerCase()))) {
+            String courseSubject = course.getSubject();
+            String courseNumber = Integer.toString(course.getNumber());
+            String courseTitle = course.getTitle();
+
+            if ((subject == null || subject.isEmpty() || courseSubject.equalsIgnoreCase(subject)) &&
+                    (number == null || number.isEmpty() || courseNumber.equalsIgnoreCase(number)) &&
+                    (title == null || title.isEmpty() || courseTitle.toLowerCase().contains(title.toLowerCase()))) {
                 results.add(course);
             }
         }
         return results;
     }
 
+    private boolean matchesSubject(Course course, String subject) {
+        return subject == null || course.getSubject().equalsIgnoreCase(subject);
+    }
+
+    private boolean matchesNumber(Course course, String number) {
+        return number == null || Integer.toString(course.getNumber()).equalsIgnoreCase(number);
+    }
+
+    private boolean matchesTitle(Course course, String title) {
+        return title == null || course.getTitle().toLowerCase().contains(title.toLowerCase());
+    }
+
+
+
     @Override
     public boolean addCourse(Course course) {
-        if (courses.contains(course)) {
+        Course trimmedCourse = new Course(
+                course.getSubject().trim(),
+                course.getNumber(),
+                course.getTitle().trim(),
+                course.getAverageRating()
+        );
+        if (courses.contains(trimmedCourse)) {
             return false;
         }
-        courses.add(course);
+        courses.add(trimmedCourse);
         return true;
     }
 

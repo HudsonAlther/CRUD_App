@@ -28,7 +28,7 @@ public class UserServiceImpl implements UserService {
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (((ResultSet) resultSet).next()) {
+            if (resultSet.next()) {
                 return new User(resultSet.getString("username"), resultSet.getString("password"));
             }
         } catch (SQLException e) {
