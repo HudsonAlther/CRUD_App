@@ -2,8 +2,11 @@ package edu.virginia.sde.service;
 import edu.virginia.sde.model.Course;
 import edu.virginia.sde.model.Review;
 
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import static edu.virginia.sde.service.UserServiceImpl.DB_URL;
 
 public interface CourseService {
     List<Course> getAllCourses();
@@ -12,12 +15,11 @@ public interface CourseService {
 
     class ReviewServiceImpl implements ReviewService {
 
-        // Placeholder for actual database integration
         private final List<Review> reviews = new ArrayList<>();
 
         @Override
         public List<Review> getReviewsByUser(String username) {
-            // Simulated logic to retrieve reviews by username
+            // Simulated logic
             List<Review> userReviews = new ArrayList<>();
             for (Review review : reviews) {
                 if (review.courseProperty().get().equals(username)) {
@@ -29,14 +31,26 @@ public interface CourseService {
 
         @Override
         public boolean addReview(Review review) {
-            return reviews.add(review);  // Actual implementation will interact with the database
+            return reviews.add(review);
         }
 
         @Override
         public boolean updateReview(Review review) {
-            // Placeholder implementation
-            return true;
+            String query = "UPDATE reviews SET rating = ?, comment = ?, timestamp = ? WHERE review_id = ?";
+            try (Connection connection = DriverManager.getConnection(DB_URL);
+                 PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+                preparedStatement.setInt(1, review.getRating());
+                preparedStatement.setString(2, review.getComment());
+                preparedStatement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+                preparedStatement.setInt(4, review.getReviewId());
+
+                return preparedStatement.executeUpdate() > 0;
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
+
 
         @Override
         public boolean deleteReview(Review review) {

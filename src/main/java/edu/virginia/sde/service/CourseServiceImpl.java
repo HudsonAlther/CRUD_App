@@ -33,6 +33,6 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public boolean addCourse(Course course) {
-        return courses.add(course); // Would insert into the database in actual implementation
+        return courses.add(course);
     }
 }
