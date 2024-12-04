@@ -5,6 +5,7 @@ import edu.virginia.sde.service.UserServiceImpl;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -39,30 +40,25 @@ public class LoginController {
         }
 
         if (userService.validateUser(username, password)) {
-            showAlert("Success", "Login successful!");
-
-            // Navigate to Course Search Scene
+            // Load the next scene
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/view/CourseSearchView.fxml"));
-                Parent courseSearchRoot = loader.load();
-
-                Stage stage = (Stage) usernameField.getScene().getWindow();
-                stage.setScene(new Scene(courseSearchRoot));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
+                Parent root = loader.load();
+                CourseSearchController courseSearchController = loader.getController();
+                courseSearchController.setUsername(username);
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new Scene(root));
                 stage.setTitle("Course Search");
                 stage.show();
-
-                // Pass user details to the next controller (optional)
-                CourseSearchController controller = loader.getController();
-                controller.setCurrentUser(username);
-
             } catch (IOException e) {
                 e.printStackTrace();
-                showAlert("Error", "Failed to load Course Search Screen.");
+                showAlert("Error", "Failed to load the Course Search screen.");
             }
         } else {
             showAlert("Error", "Invalid username or password.");
         }
     }
+
 
 
     @FXML
