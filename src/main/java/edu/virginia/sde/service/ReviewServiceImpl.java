@@ -1,9 +1,10 @@
 package edu.virginia.sde.service;
 
 import edu.virginia.sde.database.DatabaseInitializer;
-import edu.virginia.sde.model.Course;
+import edu.virginia.sde.model.*;
 import edu.virginia.sde.model.Review;
 
+import edu.virginia.sde.service.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,18 +12,17 @@ import java.util.Optional;
 
 public class ReviewServiceImpl implements ReviewService {
 
+
+
     @Override
     public List<Review> getReviewsByUser(String username) {
-        String query = """
-    SELECT r.id, r.rating, r.comment, r.timestamp, r.course_id, c.subject, c.number, c.title, u.username
-    FROM Reviews r
-    JOIN Users u ON r.user_id = u.id
-    JOIN Courses c ON r.course_id = c.id
-    WHERE u.username = ?
-""";
-
-
         List<Review> userReviews = new ArrayList<>();
+        String query = "SELECT r.id, r.rating, r.comment, r.course_id, c.title " +
+                "FROM Reviews r " +
+                "JOIN Users u ON r.user_id = u.id " +
+                "JOIN Courses c ON r.course_id = c.id " +
+                "WHERE u.username = ?";
+
         try (Connection conn = DatabaseInitializer.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -30,15 +30,33 @@ public class ReviewServiceImpl implements ReviewService {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    userReviews.add(mapResultSetToReview(rs));
+                    int reviewId = rs.getInt("id");
+                    int courseId = rs.getInt("course_id");
+                    int rating = rs.getInt("rating");
+                    String comment = rs.getString("comment");
+                    String courseTitle = rs.getString("title");
+
+                    // Use the constructor to include the `reviewId`
+                    Review review = new Review(
+                            reviewId,
+                            username,
+                            courseId,
+                            rating,
+                            comment,
+                            courseTitle
+                    );
+
+                    userReviews.add(review);
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[ERROR] Failed to fetch reviews for user: " + username);
+            System.err.println("[ERROR] Failed to fetch reviews: " + e.getMessage());
             e.printStackTrace();
         }
         return userReviews;
     }
+
+
 
     @Override
     public List<Review> getAllReviews() {
@@ -71,37 +89,19 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public boolean addReview(Review review) {
-        String getUserIdQuery = "SELECT id FROM Users WHERE username = ?";
-        String insertReviewQuery = "INSERT INTO Reviews (user_id, course_id, rating, comment, timestamp) " +
-                "VALUES (?, ?, ?, ?, DATETIME('now'))";
+        String query = "INSERT INTO Reviews (user_id, course_id, rating, comment, timestamp) " +
+                "VALUES ((SELECT id FROM Users WHERE username = ?), ?, ?, ?, DATETIME('now'))";
 
-        try (Connection conn = DatabaseInitializer.getConnection()) {
-            int userId;
+        try (Connection conn = DatabaseInitializer.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            // Step 1: Resolve user_id
-            try (PreparedStatement userStmt = conn.prepareStatement(getUserIdQuery)) {
-                userStmt.setString(1, review.getUsername());
-                try (ResultSet rs = userStmt.executeQuery()) {
-                    if (rs.next()) {
-                        userId = rs.getInt("id");
-                    } else {
-                        System.err.println("[ERROR] Username not found: " + review.getUsername());
-                        return false; // Fail if user doesn't exist
-                    }
-                }
-            }
+            stmt.setString(1, review.getUsername());
+            stmt.setInt(2, review.getCourseId());
+            stmt.setInt(3, review.getRating());
+            stmt.setString(4, review.getComment());
 
-            // Step 2: Insert the review
-            try (PreparedStatement insertStmt = conn.prepareStatement(insertReviewQuery)) {
-                insertStmt.setInt(1, userId);
-                insertStmt.setInt(2, review.getCourseId());
-                insertStmt.setInt(3, review.getRating());
-                insertStmt.setString(4, review.getComment());
-
-                int affectedRows = insertStmt.executeUpdate();
-                System.out.println("[DEBUG] Inserted review. Affected rows: " + affectedRows);
-                return affectedRows > 0;
-            }
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
 
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to add review: " + e.getMessage());
@@ -112,9 +112,11 @@ public class ReviewServiceImpl implements ReviewService {
 
 
 
+
     @Override
     public boolean updateReview(Review review) {
-        String query = "UPDATE Reviews SET rating = ?, comment = ? WHERE id = ?";
+        String query = "UPDATE Reviews SET rating = ?, comment = ? WHERE id = ? AND user_id = " +
+                "(SELECT id FROM Users WHERE username = ?)";
 
         try (Connection conn = DatabaseInitializer.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -122,7 +124,10 @@ public class ReviewServiceImpl implements ReviewService {
             stmt.setInt(1, review.getRating());
             stmt.setString(2, review.getComment());
             stmt.setInt(3, review.getReviewId());
-            return stmt.executeUpdate() > 0;
+            stmt.setString(4, review.getUsername());
+
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
 
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to update review: " + e.getMessage());
@@ -131,15 +136,24 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
-    @Override
-    public boolean deleteReview(Review review) {
-        String query = "DELETE FROM Reviews WHERE id = ?";
 
+
+
+    @Override
+    public boolean deleteReview(int reviewId, String username) {
+        String query = "DELETE FROM Reviews WHERE id = ? AND user_id = (SELECT id FROM Users WHERE username = ?)";
         try (Connection conn = DatabaseInitializer.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            stmt.setInt(1, review.getReviewId());
-            return stmt.executeUpdate() > 0;
+            stmt.setInt(1, reviewId);
+            stmt.setString(2, username);
+
+            System.out.println("[DEBUG] Executing query: " + stmt);
+
+            int rowsAffected = stmt.executeUpdate();
+            System.out.println("[DEBUG] Rows affected: " + rowsAffected);
+
+            return rowsAffected > 0;
 
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to delete review: " + e.getMessage());
@@ -147,6 +161,9 @@ public class ReviewServiceImpl implements ReviewService {
             return false;
         }
     }
+
+
+
 
     @Override
     public Optional<Review> getReviewById(int reviewId) {
@@ -216,5 +233,7 @@ public class ReviewServiceImpl implements ReviewService {
         // Create the Review object
         return new Review(reviewId, username, courseId, rating, comment, courseTitle);
     }
+
+
 
 }

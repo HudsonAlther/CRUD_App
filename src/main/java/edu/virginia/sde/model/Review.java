@@ -17,7 +17,7 @@ public class Review {
         this.courseId = new SimpleIntegerProperty(courseId);
         this.rating = new SimpleIntegerProperty(rating);
         this.comment = new SimpleStringProperty(comment);
-        this.courseTitle = new SimpleStringProperty(courseTitle); // Initialize the new property
+        this.courseTitle = new SimpleStringProperty(courseTitle);
     }
 
     // Property getter for JavaFX bindings

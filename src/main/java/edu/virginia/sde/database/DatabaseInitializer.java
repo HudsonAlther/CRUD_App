@@ -4,7 +4,6 @@ import java.sql.*;
 
 public class DatabaseInitializer {
 
-
     private static String DB_URL = "jdbc:sqlite:course_reviews.db";
 
     public static void setDbUrl(String dbUrl) {
@@ -36,18 +35,18 @@ public class DatabaseInitializer {
     public static void createTables(Connection conn) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS Users (" +
-                    "id INTEGER PRIMARY KEY," +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "username TEXT UNIQUE NOT NULL," +
                     "password TEXT NOT NULL" +
                     ")");
             stmt.execute("CREATE TABLE IF NOT EXISTS Courses (" +
-                    "id INTEGER PRIMARY KEY," +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "subject TEXT NOT NULL," +
                     "number INTEGER NOT NULL," +
                     "title TEXT NOT NULL" +
                     ")");
             stmt.execute("CREATE TABLE IF NOT EXISTS Reviews (" +
-                    "id INTEGER PRIMARY KEY," +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "user_id INTEGER NOT NULL REFERENCES Users(id)," +
                     "course_id INTEGER NOT NULL REFERENCES Courses(id)," +
                     "rating INTEGER NOT NULL," +
@@ -59,7 +58,7 @@ public class DatabaseInitializer {
 
     public static void populateDefaultCourses(Connection conn) {
         String checkQuery = "SELECT COUNT(*) FROM Courses";
-        String insertQuery = "INSERT INTO Courses (id, subject, number, title) VALUES (?, ?, ?, ?)";
+        String insertQuery = "INSERT INTO Courses (subject, number, title) VALUES (?, ?, ?)";
 
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(checkQuery)) {
@@ -67,22 +66,19 @@ public class DatabaseInitializer {
             if (rs.next() && rs.getInt(1) == 0) { // Table is empty
                 conn.setAutoCommit(false); // Begin transaction
                 try (PreparedStatement pstmt = conn.prepareStatement(insertQuery)) {
-                    pstmt.setInt(1, 1); // ID for Software Development
-                    pstmt.setString(2, "CS");
-                    pstmt.setInt(3, 3140);
-                    pstmt.setString(4, "Software Development Essentials");
+                    pstmt.setString(1, "CS");
+                    pstmt.setInt(2, 3140);
+                    pstmt.setString(3, "Software Development Essentials");
                     pstmt.addBatch();
 
-                    pstmt.setInt(1, 2); // ID for Calculus I
-                    pstmt.setString(2, "MATH");
-                    pstmt.setInt(3, 1210);
-                    pstmt.setString(4, "Calculus I");
+                    pstmt.setString(1, "MATH");
+                    pstmt.setInt(2, 1210);
+                    pstmt.setString(3, "Calculus I");
                     pstmt.addBatch();
 
-                    pstmt.setInt(1, 3); // Add another course
-                    pstmt.setString(2, "PHYS");
-                    pstmt.setInt(3, 2010);
-                    pstmt.setString(4, "Physics I");
+                    pstmt.setString(1, "PHYS");
+                    pstmt.setInt(2, 2010);
+                    pstmt.setString(3, "Physics I");
                     pstmt.addBatch();
 
                     pstmt.executeBatch(); // Execute all insertions
@@ -101,17 +97,22 @@ public class DatabaseInitializer {
         }
     }
 
-
-
     public static void populateSampleData(Connection conn) {
         try (Statement stmt = conn.createStatement()) {
             System.out.println("[INFO] Populating sample data...");
+
+            // Insert sample user
             stmt.execute("INSERT OR IGNORE INTO Users (username, password) VALUES ('a', '1')");
-            stmt.execute("INSERT OR IGNORE INTO Courses (subject, number, title) VALUES ('CS', 3140, 'Software Development Essentials')");
+
+            // Insert sample courses (if not already done)
+            populateDefaultCourses(conn);
+
+            // Insert sample review
             stmt.execute("INSERT OR IGNORE INTO Reviews (user_id, course_id, rating, comment, timestamp) " +
                     "VALUES ((SELECT id FROM Users WHERE username = 'a'), " +
                     "(SELECT id FROM Courses WHERE subject = 'CS' AND number = 3140), " +
-                    "2, 'mid!', DATETIME('now'))");
+                    "5, 'Great course!', DATETIME('now'))");
+
             System.out.println("[INFO] Sample data inserted successfully.");
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to insert sample data: " + e.getMessage());
@@ -134,18 +135,21 @@ public class DatabaseInitializer {
         }
     }
 
-    public static void printCourses(Connection conn) {
-        String query = "SELECT id, subject, number, title FROM Courses";
+    public static void printTableData(Connection conn, String tableName) {
+        String query = "SELECT * FROM " + tableName;
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            System.out.println("=== " + tableName + " ===");
             while (rs.next()) {
-                System.out.printf("ID: %d, Subject: %s, Number: %d, Title: %s%n",
-                        rs.getInt("id"), rs.getString("subject"),
-                        rs.getInt("number"), rs.getString("title"));
+                for (int i = 1; i <= columnCount; i++) {
+                    System.out.print(metaData.getColumnName(i) + ": " + rs.getObject(i) + " | ");
+                }
+                System.out.println();
             }
         } catch (SQLException e) {
-            System.err.println("[ERROR] Failed to fetch courses: " + e.getMessage());
+            System.err.println("[ERROR] Failed to fetch data from " + tableName + ": " + e.getMessage());
         }
     }
-
 }

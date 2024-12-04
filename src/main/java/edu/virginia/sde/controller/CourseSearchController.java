@@ -1,6 +1,7 @@
 package edu.virginia.sde.controller;
 
 import edu.virginia.sde.model.Course;
+import edu.virginia.sde.managers.SessionManager;
 import edu.virginia.sde.service.CourseService;
 import edu.virginia.sde.service.CourseServiceImpl;
 import edu.virginia.sde.service.ReviewServiceImpl;
@@ -94,7 +95,6 @@ public class CourseSearchController {
 
         Course course = new Course(0, subject, Integer.parseInt(number), title, 0.0);
 
-
         if (courseService.addCourse(course)) {
             showAlert("Success", "Course added successfully!");
             refreshCourseTable();
@@ -103,15 +103,13 @@ public class CourseSearchController {
         }
     }
 
-    @FXML
     public void handleMyReviews(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/MyReviewsView.fxml"));
             Parent root = loader.load();
 
-            MyReviewsController myReviewsController = loader.getController();
-            myReviewsController.setReviewService(new ReviewServiceImpl());
-            myReviewsController.setUsername(username);
+            // Check username before navigating
+            System.out.println("[DEBUG] Current username in SessionManager: " + SessionManager.getUsername());
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -122,6 +120,7 @@ public class CourseSearchController {
             showAlert("Error", "Failed to load the My Reviews screen.");
         }
     }
+
 
 
     @FXML

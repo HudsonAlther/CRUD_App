@@ -1,6 +1,7 @@
 package edu.virginia.sde.controller;
 
 import edu.virginia.sde.service.UserService;
+import edu.virginia.sde.managers.*;
 import edu.virginia.sde.service.UserServiceImpl;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,13 +41,13 @@ public class LoginController {
         }
 
         if (userService.validateUser(username, password)) {
+            // Set the username in SessionManager
+            SessionManager.setUsername(username);
+            System.out.println("[DEBUG] Username set in SessionManager: " + SessionManager.getUsername());
+
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
                 Parent root = loader.load();
-
-                // Pass username to the next controller
-                CourseSearchController courseSearchController = loader.getController();
-                courseSearchController.setUsername(username);
 
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
@@ -60,6 +61,8 @@ public class LoginController {
             showAlert("Error", "Invalid username or password.");
         }
     }
+
+
 
     @FXML
     public void handleRegister(ActionEvent event) {

@@ -1,5 +1,6 @@
 package edu.virginia.sde.controller;
 
+import edu.virginia.sde.managers.SessionManager;
 import edu.virginia.sde.model.Review;
 import edu.virginia.sde.model.Course;
 import edu.virginia.sde.service.ReviewService;
@@ -55,6 +56,13 @@ public class WriteReviewController {
         Course selectedCourse = courseComboBox.getSelectionModel().getSelectedItem();
         String ratingText = ratingField.getText();
         String comment = commentField.getText();
+
+        String username = SessionManager.getUsername();
+        if (username == null || username.isEmpty()) {
+            showAlert("Error", "No username found. Please log in again.");
+            return;
+        }
+
 
         if (selectedCourse == null || ratingText.isEmpty() || comment.isEmpty()) {
             showAlert("Error", "Please fill in all fields.");

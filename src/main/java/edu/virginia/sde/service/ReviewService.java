@@ -11,6 +11,8 @@ public interface ReviewService {
     List<Review> searchReviews(String keyword);
     boolean addReview(Review review);
     boolean updateReview(Review review);
-    boolean deleteReview(Review review);
+
+    boolean deleteReview(int reviewId, String username);
+
     Optional<Review> getReviewById(int reviewId);
 }
