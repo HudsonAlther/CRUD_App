@@ -1,5 +1,5 @@
 package edu.virginia.sde.controller;
-import edu.virginia.sde.model.User;
+
 import edu.virginia.sde.service.UserService;
 import edu.virginia.sde.service.UserServiceImpl;
 import javafx.event.ActionEvent;
@@ -11,7 +11,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -19,20 +18,21 @@ import java.io.IOException;
 public class LoginController {
 
     @FXML
-    protected TextField usernameField;
+    private TextField usernameField;
 
     @FXML
-    protected PasswordField passwordField;
+    private PasswordField passwordField;
 
-    @FXML
-    private VBox registerForm;
+    private UserService userService;
 
-    protected UserService userService = new UserServiceImpl();
+    public LoginController() {
+        this.userService = new UserServiceImpl();
+    }
 
     @FXML
     public void handleLogin(ActionEvent event) {
-        String username = usernameField.getText();
-        String password = passwordField.getText();
+        String username = usernameField.getText().trim();
+        String password = passwordField.getText().trim();
 
         if (username.isEmpty() || password.isEmpty()) {
             showAlert("Error", "Username or password cannot be empty.");
@@ -40,12 +40,14 @@ public class LoginController {
         }
 
         if (userService.validateUser(username, password)) {
-            // Load the next scene
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
                 Parent root = loader.load();
+
+                // Pass username to the next controller
                 CourseSearchController courseSearchController = loader.getController();
                 courseSearchController.setUsername(username);
+
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
                 stage.setTitle("Course Search");
@@ -59,33 +61,22 @@ public class LoginController {
         }
     }
 
-
-
     @FXML
     public void handleRegister(ActionEvent event) {
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
 
         if (username.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Username and password cannot be empty.");
+            showAlert("Error", "Username or password cannot be empty.");
             return;
         }
 
-        if (password.length() < 8) {
-            showAlert("Error", "Password must be at least 8 characters long.");
-            return;
-        }
-
-        User newUser = new User(username, password);
-        boolean isCreated = userService.createUser(newUser);
-
-        if (isCreated) {
+        if (userService.createUser(username, password)) {
             showAlert("Success", "User registered successfully! Please log in.");
         } else {
-            showAlert("Error", "Username already exists. Please choose another.");
+            showAlert("Error", "Registration failed. Username may already exist.");
         }
     }
-
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -97,16 +88,24 @@ public class LoginController {
     public void setUserService(UserService userService) {
         this.userService = userService;
     }
+    @FXML
+    public void handleCreateUser(ActionEvent event) {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
 
-    public void setUsernameField(TextField usernameField) {
-        this.usernameField = usernameField;
+        if (username.isEmpty() || password.isEmpty()) {
+            showAlert("Error", "Username or password cannot be empty.");
+            return;
+        }
+
+        boolean isCreated = userService.createUser(username, password);
+        if (isCreated) {
+            showAlert("Success", "User created successfully! You can now log in.");
+            usernameField.clear();
+            passwordField.clear();
+        } else {
+            showAlert("Error", "Failed to create user. Username might already exist.");
+        }
     }
-
-    public void setPasswordField(PasswordField passwordField) {
-        this.passwordField = passwordField;
-    }
-
-
-
 
 }

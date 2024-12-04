@@ -16,39 +16,49 @@ public class UserServiceImplTest {
     @BeforeEach
     public void setUp() {
         userService = new UserServiceImpl();
-        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:course_reviews.db")) {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:test_course_reviews.db")) {
             Statement stmt = connection.createStatement();
-            stmt.execute("DROP TABLE IF EXISTS users");
-            stmt.execute("CREATE TABLE users (username TEXT PRIMARY KEY, password TEXT)");
+            stmt.execute("DROP TABLE IF EXISTS Users");
+            stmt.execute("CREATE TABLE Users (" +
+                    "id INTEGER PRIMARY KEY," +
+                    "username TEXT UNIQUE NOT NULL," +
+                    "password TEXT NOT NULL" +
+                    ")");
         } catch (SQLException e) {
             e.printStackTrace();
-            fail("Failed to set up database");
+            fail("Failed to set up database: " + e.getMessage());
         }
     }
 
-    @Test
-    public void testCreateUser() {
-        User user = new User("testUser", "password123");
-        boolean isCreated = userService.createUser(user);
-        assertTrue(isCreated, "User should be created successfully");
+    @AfterEach
+    public void tearDown() {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:test_course_reviews.db")) {
+            Statement stmt = connection.createStatement();
+            stmt.execute("DROP TABLE IF EXISTS Users");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            fail("Failed to clean up database: " + e.getMessage());
+        }
     }
+
+
 
     @Test
     public void testGetUser() {
-        User user = new User("testUser", "password123");
-        userService.createUser(user);
-
+        userService.createUser("testUser", "password123");
         User fetchedUser = userService.getUser("testUser");
+
         assertNotNull(fetchedUser, "Fetched user should not be null");
         assertEquals("testUser", fetchedUser.getUsername(), "Username should match");
+        assertEquals("password123", fetchedUser.getPassword(), "Password should match");
     }
 
     @Test
     public void testValidateUser() {
-        User user = new User("testUser", "password123");
-        userService.createUser(user);
+        userService.createUser("testUser", "password123");
 
         assertTrue(userService.validateUser("testUser", "password123"), "Validation should succeed for correct credentials");
         assertFalse(userService.validateUser("testUser", "wrongPassword"), "Validation should fail for incorrect password");
+        assertFalse(userService.validateUser("nonExistentUser", "password123"), "Validation should fail for non-existent user");
     }
 }

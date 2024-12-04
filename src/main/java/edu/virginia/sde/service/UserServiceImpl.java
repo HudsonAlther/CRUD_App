@@ -15,7 +15,7 @@ public class UserServiceImpl implements UserService {
     // Ensures the Users table exists
     private void initializeDatabase() {
         String createTableSQL = "CREATE TABLE IF NOT EXISTS Users (" +
-                "id INTEGER PRIMARY KEY," +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," + // Added AUTOINCREMENT for automatic id generation
                 "username TEXT UNIQUE NOT NULL," +
                 "password TEXT NOT NULL" +
                 ")";
@@ -28,25 +28,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean createUser(User user) {
-        String checkQuery = "SELECT COUNT(*) FROM Users WHERE username = ?";
+    public boolean createUser(String username, String password) {
         String insertQuery = "INSERT INTO Users (username, password) VALUES (?, ?)";
-        try (Connection connection = DriverManager.getConnection(DB_URL);
-             PreparedStatement checkStmt = connection.prepareStatement(checkQuery);
-             PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
-
-            // Check if username already exists
-            checkStmt.setString(1, user.getUsername());
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                return false; // Username exists
-            }
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
 
             // Insert new user
-            insertStmt.setString(1, user.getUsername());
-            insertStmt.setString(2, user.getPassword());
-            return insertStmt.executeUpdate() > 0; // Returns true if insertion is successful
+            insertStmt.setString(1, username);
+            insertStmt.setString(2, password);
+            insertStmt.executeUpdate();
+            return true; // User created successfully
+
         } catch (SQLException e) {
+            System.err.println("SQL Error during createUser: " + e.getMessage()); // Added more detailed logging
             e.printStackTrace();
             return false;
         }

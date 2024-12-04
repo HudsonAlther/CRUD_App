@@ -12,7 +12,7 @@ public class Review {
     public Review(int reviewId, String username, String courseTitle, int rating, String comment) {
         this.reviewId = new SimpleIntegerProperty(reviewId);
         this.username = new SimpleStringProperty(username);
-        this.courseTitle = new SimpleStringProperty(courseTitle); // Preload course title
+        this.courseTitle = new SimpleStringProperty(courseTitle);
         this.rating = new SimpleIntegerProperty(rating);
         this.comment = new SimpleStringProperty(comment);
     }

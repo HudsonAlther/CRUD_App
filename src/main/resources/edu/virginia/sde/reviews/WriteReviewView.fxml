@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.virginia.sde.controller.WriteReviewController">
+    <Label text="Write a Review" style="-fx-font-size: 20px;" />
+    <ComboBox fx:id="courseComboBox" promptText="Select a Course" />
+    <TextField fx:id="ratingField" promptText="Rating (1-5)" />
+    <TextArea fx:id="commentField" promptText="Write your review here..." prefHeight="100" />
+    <Button text="Submit" onAction="#handleSubmitReview" />
+    <Button text="Cancel" onAction="#handleCancel" />
+</VBox>

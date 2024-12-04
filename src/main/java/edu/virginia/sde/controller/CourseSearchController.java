@@ -155,4 +155,24 @@ public class CourseSearchController {
         this.username = username;
         System.out.println("Logged-in user: " + username);
     }
+
+    @FXML
+    public void handleWriteReview(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/WriteReviewView.fxml"));
+            Parent root = loader.load();
+
+            WriteReviewController writeReviewController = loader.getController();
+            writeReviewController.setUsername(username);
+
+            Stage stage = new Stage();
+            stage.setTitle("Write Review");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to load the Write Review screen.");
+        }
+    }
+
 }
