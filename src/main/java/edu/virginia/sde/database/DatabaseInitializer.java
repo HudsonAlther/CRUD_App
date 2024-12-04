@@ -1,9 +1,6 @@
 package edu.virginia.sde.database;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class DatabaseInitializer {
 
@@ -15,15 +12,16 @@ public class DatabaseInitializer {
             conn = DriverManager.getConnection(DB_URL);
             if (conn != null) {
                 System.out.println("[INFO] Connected to the database.");
-                enableForeignKeys(conn); // Ensure foreign keys are enabled
-                createTables(conn); // Recreate tables
-                System.out.println("[INFO] Database tables created successfully.");
+                enableForeignKeys(conn);
+                createTables(conn);
+                populateDefaultCourses(conn);
+                System.out.println("[INFO] Database setup complete.");
             }
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to initialize database: " + e.getMessage());
             e.printStackTrace();
         }
-        return conn; // Return the connection
+        return conn;
     }
 
     private static void enableForeignKeys(Connection conn) throws SQLException {
@@ -35,10 +33,6 @@ public class DatabaseInitializer {
 
     private static void createTables(Connection conn) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
-            System.out.println("[INFO] Creating Users table...");
-            stmt.execute("DROP TABLE IF EXISTS Reviews");
-            stmt.execute("DROP TABLE IF EXISTS Courses");
-            stmt.execute("DROP TABLE IF EXISTS Users");
             stmt.execute("CREATE TABLE IF NOT EXISTS Users (" +
                     "id INTEGER PRIMARY KEY," +
                     "username TEXT UNIQUE NOT NULL," +
@@ -46,7 +40,6 @@ public class DatabaseInitializer {
                     ")");
             System.out.println("[INFO] Users table created or already exists.");
 
-            System.out.println("[INFO] Creating Courses table...");
             stmt.execute("CREATE TABLE IF NOT EXISTS Courses (" +
                     "id INTEGER PRIMARY KEY," +
                     "subject TEXT NOT NULL," +
@@ -55,7 +48,6 @@ public class DatabaseInitializer {
                     ")");
             System.out.println("[INFO] Courses table created or already exists.");
 
-            System.out.println("[INFO] Creating Reviews table...");
             stmt.execute("CREATE TABLE IF NOT EXISTS Reviews (" +
                     "id INTEGER PRIMARY KEY," +
                     "user_id INTEGER NOT NULL REFERENCES Users(id)," +
@@ -65,6 +57,35 @@ public class DatabaseInitializer {
                     "timestamp DATETIME NOT NULL" +
                     ")");
             System.out.println("[INFO] Reviews table created or already exists.");
+        }
+    }
+
+    public static void populateDefaultCourses(Connection conn) {
+        String checkQuery = "SELECT COUNT(*) FROM Courses";
+        String insertQuery = "INSERT INTO Courses (subject, number, title) VALUES (?, ?, ?)";
+
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(checkQuery)) {
+
+            if (rs.next() && rs.getInt(1) == 0) { // If no courses exist
+                try (PreparedStatement pstmt = conn.prepareStatement(insertQuery)) {
+                    pstmt.setString(1, "CS");
+                    pstmt.setInt(2, 3140);
+                    pstmt.setString(3, "Software Development Essentials");
+                    pstmt.addBatch();
+
+                    pstmt.setString(1, "MATH");
+                    pstmt.setInt(2, 1210);
+                    pstmt.setString(3, "Calculus I");
+                    pstmt.addBatch();
+
+                    pstmt.executeBatch();
+                    System.out.println("[INFO] Default courses inserted.");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[ERROR] Failed to populate default courses: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
