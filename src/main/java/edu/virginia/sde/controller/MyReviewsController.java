@@ -79,27 +79,6 @@ public class MyReviewsController {
         }
     }
 
-    @FXML
-    public void handleMyReviews(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/MyReviewsView.fxml"));
-            Parent root = loader.load();
-
-            MyReviewsController myReviewsController = loader.getController();
-            myReviewsController.setReviewService(new ReviewServiceImpl()); // Set the ReviewService
-            myReviewsController.setUsername(username); // Set the username after initializing ReviewService
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("My Reviews");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("Error", "Failed to load the My Reviews screen.");
-        }
-    }
-
-
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);

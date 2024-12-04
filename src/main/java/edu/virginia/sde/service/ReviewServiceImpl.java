@@ -14,12 +14,13 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public List<Review> getReviewsByUser(String username) {
         String query = """
-            SELECT r.id, r.rating, r.comment, r.timestamp, r.course_id, c.subject, c.number, c.title
-            FROM Reviews r
-            JOIN Users u ON r.user_id = u.id
-            JOIN Courses c ON r.course_id = c.id
-            WHERE u.username = ?
-        """;
+    SELECT r.id, r.rating, r.comment, r.timestamp, r.course_id, c.subject, c.number, c.title, u.username
+    FROM Reviews r
+    JOIN Users u ON r.user_id = u.id
+    JOIN Courses c ON r.course_id = c.id
+    WHERE u.username = ?
+""";
+
 
         List<Review> userReviews = new ArrayList<>();
         try (Connection conn = DatabaseInitializer.getConnection();
@@ -70,34 +71,27 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public boolean addReview(Review review) {
-        String validateUserQuery = "SELECT id FROM Users WHERE username = ?";
-        String validateCourseQuery = "SELECT id FROM Courses WHERE id = ?";
-        String insertQuery = """
-            INSERT INTO Reviews (user_id, course_id, rating, comment, timestamp)
-            VALUES (?, ?, ?, ?, DATETIME('now'))
-        """;
+        String query = "INSERT INTO Reviews (user_id, course_id, rating, comment, timestamp) " +
+                "VALUES ((SELECT id FROM Users WHERE username = ?), ?, ?, ?, DATETIME('now'))";
 
-        try (Connection conn = DatabaseInitializer.getConnection()) {
-            // Validate user ID
-            int userId = validateUserId(conn, review.getUsername(), validateUserQuery);
+        try (Connection conn = DatabaseInitializer.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            // Validate course ID
-            validateCourseId(conn, review.getCourseId(), validateCourseQuery);
+            stmt.setString(1, review.getUsername());
+            stmt.setInt(2, review.getCourseId());
+            stmt.setInt(3, review.getRating());
+            stmt.setString(4, review.getComment());
 
-            // Insert review
-            try (PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
-                stmt.setInt(1, userId);
-                stmt.setInt(2, review.getCourseId());
-                stmt.setInt(3, review.getRating());
-                stmt.setString(4, review.getComment());
-                return stmt.executeUpdate() > 0;
-            }
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to add review: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
+
 
     @Override
     public boolean updateReview(Review review) {
