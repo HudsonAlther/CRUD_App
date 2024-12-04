@@ -13,58 +13,62 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public List<Course> getAllCourses() {
+        String query = "SELECT id, subject, number, title, (SELECT AVG(rating) FROM Reviews WHERE course_id = Courses.id) AS averageRating FROM Courses";
         List<Course> courses = new ArrayList<>();
-        String query = "SELECT subject, number, title, (SELECT AVG(rating) FROM Reviews WHERE course_id = Courses.id) AS averageRating FROM Courses";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL);
+        try (Connection conn = DatabaseInitializer.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
 
             while (rs.next()) {
-                String subject = rs.getString("subject");
-                int number = rs.getInt("number");
-                String title = rs.getString("title");
-                double averageRating = rs.getDouble("averageRating");
-
-                courses.add(new Course(subject, number, title, averageRating));
+                courses.add(new Course(
+                        rs.getInt("id"),
+                        rs.getString("subject"),
+                        rs.getInt("number"),
+                        rs.getString("title"),
+                        rs.getDouble("averageRating")
+                ));
             }
         } catch (SQLException e) {
+            System.err.println("[ERROR] Failed to fetch courses: " + e.getMessage());
             e.printStackTrace();
         }
-
         return courses;
     }
 
     @Override
     public List<Course> searchCourses(String subject, String number, String title) {
         List<Course> results = new ArrayList<>();
-        StringBuilder query = new StringBuilder("SELECT subject, number, title, (SELECT AVG(rating) FROM Reviews WHERE course_id = Courses.id) AS averageRating FROM Courses WHERE 1=1");
+        StringBuilder queryBuilder = new StringBuilder("SELECT id, subject, number, title, (SELECT AVG(rating) FROM Reviews WHERE course_id = Courses.id) AS averageRating FROM Courses WHERE 1=1");
 
-        if (subject != null && !subject.isEmpty()) query.append(" AND subject LIKE ?");
-        if (number != null && !number.isEmpty()) query.append(" AND number = ?");
-        if (title != null && !title.isEmpty()) query.append(" AND title LIKE ?");
+        // Dynamically append conditions
+        if (subject != null && !subject.isBlank()) queryBuilder.append(" AND subject LIKE ?");
+        if (number != null && !number.isBlank()) queryBuilder.append(" AND number = ?");
+        if (title != null && !title.isBlank()) queryBuilder.append(" AND title LIKE ?");
 
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(query.toString())) {
+        try (Connection conn = DatabaseInitializer.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(queryBuilder.toString())) {
 
-            int index = 1;
-            if (subject != null && !subject.isEmpty()) pstmt.setString(index++, "%" + subject + "%");
-            if (number != null && !number.isEmpty()) pstmt.setInt(index++, Integer.parseInt(number));
-            if (title != null && !title.isEmpty()) pstmt.setString(index, "%" + title + "%");
+            int paramIndex = 1;
+            if (subject != null && !subject.isBlank()) pstmt.setString(paramIndex++, "%" + subject.trim() + "%");
+            if (number != null && !number.isBlank()) pstmt.setInt(paramIndex++, Integer.parseInt(number.trim()));
+            if (title != null && !title.isBlank()) pstmt.setString(paramIndex++, "%" + title.trim() + "%");
 
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String courseSubject = rs.getString("subject");
-                int courseNumber = rs.getInt("number");
-                String courseTitle = rs.getString("title");
-                double averageRating = rs.getDouble("averageRating");
-
-                results.add(new Course(courseSubject, courseNumber, courseTitle, averageRating));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new Course(
+                            rs.getInt("id"),
+                            rs.getString("subject"),
+                            rs.getInt("number"),
+                            rs.getString("title"),
+                            rs.getDouble("averageRating")
+                    ));
+                }
             }
-        } catch (SQLException e) {
+        } catch (SQLException | NumberFormatException e) {
+            System.err.println("[ERROR] Failed to search courses: " + e.getMessage());
             e.printStackTrace();
         }
-
         return results;
     }
 
@@ -86,6 +90,7 @@ public class CourseServiceImpl implements CourseService {
             if (e.getMessage().contains("UNIQUE constraint failed")) {
                 System.err.println("[ERROR] Course already exists in the database.");
             } else {
+                System.err.println("[ERROR] Failed to add course: " + e.getMessage());
                 e.printStackTrace();
             }
             return false;
@@ -94,25 +99,28 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public Course getCourseById(int courseId) {
-        String query = "SELECT subject, number, title, (SELECT AVG(rating) FROM Reviews WHERE course_id = Courses.id) AS averageRating FROM Courses WHERE id = ?";
+        String query = "SELECT id, subject, number, title, (SELECT AVG(rating) FROM Reviews WHERE course_id = Courses.id) AS averageRating FROM Courses WHERE id = ?";
+
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(query)) {
 
             pstmt.setInt(1, courseId);
-            ResultSet rs = pstmt.executeQuery();
 
-            if (rs.next()) {
-                String subject = rs.getString("subject");
-                int number = rs.getInt("number");
-                String title = rs.getString("title");
-                double averageRating = rs.getDouble("averageRating");
-
-                return new Course(subject, number, title, averageRating);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Course(
+                            rs.getInt("id"),
+                            rs.getString("subject"),
+                            rs.getInt("number"),
+                            rs.getString("title"),
+                            rs.getDouble("averageRating")
+                    );
+                }
             }
         } catch (SQLException e) {
+            System.err.println("[ERROR] Failed to fetch course by ID: " + e.getMessage());
             e.printStackTrace();
         }
-
         return null;
     }
 }

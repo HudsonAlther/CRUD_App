@@ -13,65 +13,84 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<Review> getReviewsByUser(String username) {
+        String query = """
+            SELECT r.id, r.rating, r.comment, r.timestamp, r.course_id, c.subject, c.number, c.title
+            FROM Reviews r
+            JOIN Users u ON r.user_id = u.id
+            JOIN Courses c ON r.course_id = c.id
+            WHERE u.username = ?
+        """;
+
         List<Review> userReviews = new ArrayList<>();
-        String query = "SELECT r.id, r.rating, r.comment, r.timestamp, r.course_id, c.subject, c.number, c.title " +
-                "FROM Reviews r " +
-                "JOIN Users u ON r.user_id = u.id " +
-                "JOIN Courses c ON r.course_id = c.id " +
-                "WHERE u.username = ?";
-        try (Connection conn = DatabaseInitializer.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DatabaseInitializer.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
 
-                stmt.setString(1, username);
+            stmt.setString(1, username);
 
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        int reviewId = rs.getInt("id");
-                        int courseId = rs.getInt("course_id");
-                        int rating = rs.getInt("rating");
-                        String comment = rs.getString("comment");
-                        String subject = rs.getString("subject");
-                        int number = rs.getInt("number");
-                        String title = rs.getString("title");
-                        Review review = new Review(reviewId, username, courseId, title, rating, comment);
-                        userReviews.add(review);
-                    }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    userReviews.add(mapResultSetToReview(rs));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[ERROR] Failed to fetch reviews: " + e.getMessage());
+            System.err.println("[ERROR] Failed to fetch reviews for user: " + username);
             e.printStackTrace();
         }
         return userReviews;
     }
 
+    @Override
+    public List<Review> getAllReviews() {
+        String query = """
+            SELECT r.id, r.rating, r.comment, r.timestamp, r.course_id, u.username, c.subject, c.number, c.title
+            FROM Reviews r
+            JOIN Users u ON r.user_id = u.id
+            JOIN Courses c ON r.course_id = c.id
+        """;
+
+        List<Review> reviews = new ArrayList<>();
+        try (Connection conn = DatabaseInitializer.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                reviews.add(mapResultSetToReview(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("[ERROR] Failed to fetch all reviews.");
+            e.printStackTrace();
+        }
+        return reviews;
+    }
+
+    @Override
+    public List<Review> searchReviews(String keyword) {
+        return null;
+    }
 
     @Override
     public boolean addReview(Review review) {
-        String query = "INSERT INTO Reviews (user_id, course_id, rating, comment, timestamp) " +
-                "VALUES ((SELECT id FROM Users WHERE username = ?), ?, ?, ?, DATETIME('now'))";
+        String validateUserQuery = "SELECT id FROM Users WHERE username = ?";
+        String validateCourseQuery = "SELECT id FROM Courses WHERE id = ?";
+        String insertQuery = """
+            INSERT INTO Reviews (user_id, course_id, rating, comment, timestamp)
+            VALUES (?, ?, ?, ?, DATETIME('now'))
+        """;
 
         try (Connection conn = DatabaseInitializer.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            // Validate user ID
+            int userId = validateUserId(conn, review.getUsername(), validateUserQuery);
 
-                stmt.setString(1, review.getUsername());
+            // Validate course ID
+            validateCourseId(conn, review.getCourseId(), validateCourseQuery);
+
+            // Insert review
+            try (PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
+                stmt.setInt(1, userId);
                 stmt.setInt(2, review.getCourseId());
                 stmt.setInt(3, review.getRating());
                 stmt.setString(4, review.getComment());
-
-                int affectedRows = stmt.executeUpdate();
-
-                // Debugging statement
-                if (affectedRows > 0) {
-                    System.out.println("[DEBUG] Successfully added review for user: " + review.getUsername() + ", Course ID: " + review.getCourseId());
-                } else {
-                    System.out.println("[DEBUG] Failed to add review for user: " + review.getUsername());
-                }
-
-                return affectedRows > 0;
-
+                return stmt.executeUpdate() > 0;
             }
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to add review: " + e.getMessage());
@@ -90,9 +109,7 @@ public class ReviewServiceImpl implements ReviewService {
             stmt.setInt(1, review.getRating());
             stmt.setString(2, review.getComment());
             stmt.setInt(3, review.getReviewId());
-
-            int affectedRows = stmt.executeUpdate();
-            return affectedRows > 0;
+            return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to update review: " + e.getMessage());
@@ -109,9 +126,7 @@ public class ReviewServiceImpl implements ReviewService {
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setInt(1, review.getReviewId());
-
-            int affectedRows = stmt.executeUpdate();
-            return affectedRows > 0;
+            return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to delete review: " + e.getMessage());
@@ -122,11 +137,13 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Optional<Review> getReviewById(int reviewId) {
-        String query = "SELECT r.id, r.rating, r.comment, r.timestamp, u.username, c.id AS course_id, c.subject, c.number, c.title " +
-                "FROM Reviews r " +
-                "JOIN Users u ON r.user_id = u.id " +
-                "JOIN Courses c ON r.course_id = c.id " +
-                "WHERE r.id = ?";
+        String query = """
+            SELECT r.id, r.rating, r.comment, r.timestamp, r.course_id, u.username, c.subject, c.number, c.title
+            FROM Reviews r
+            JOIN Users u ON r.user_id = u.id
+            JOIN Courses c ON r.course_id = c.id
+            WHERE r.id = ?
+        """;
 
         try (Connection conn = DatabaseInitializer.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -135,21 +152,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    // Extract review details
-                    int courseId = rs.getInt("course_id");
-                    int rating = rs.getInt("rating");
-                    String comment = rs.getString("comment");
-                    String subject = rs.getString("subject");
-                    int number = rs.getInt("number");
-                    String title = rs.getString("title");
-                    String username = rs.getString("username");
-
-                    // Create course title
-                    String courseTitle = subject + " " + number + ": " + title;
-
-                    // Create a Review object and return it
-                    Review review = new Review(reviewId, username, courseId, courseTitle, rating, comment);
-                    return Optional.of(review);
+                    return Optional.of(mapResultSetToReview(rs));
                 }
             }
         } catch (SQLException e) {
@@ -159,79 +162,46 @@ public class ReviewServiceImpl implements ReviewService {
         return Optional.empty();
     }
 
-    @Override
-    public List<Review> getAllReviews() {
-        List<Review> reviews = new ArrayList<>();
-        String query = "SELECT r.id, r.rating, r.comment, r.timestamp, u.username, c.id AS course_id, c.subject, c.number, c.title " +
-                "FROM Reviews r " +
-                "JOIN Users u ON r.user_id = u.id " +
-                "JOIN Courses c ON r.course_id = c.id";
-        try (Connection conn = DatabaseInitializer.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                int reviewId = rs.getInt("id");
-                int courseId = rs.getInt("course_id");
-                int rating = rs.getInt("rating");
-                String comment = rs.getString("comment");
-                String subject = rs.getString("subject");
-                int number = rs.getInt("number");
-                String title = rs.getString("title");
-                String username = rs.getString("username");
-
-                // Create course title
-                String courseTitle = subject + " " + number + ": " + title;
-
-                // Create a Review object and add it to the list
-                Review review = new Review(reviewId, username, courseId, courseTitle, rating, comment);
-                reviews.add(review);
-            }
-        } catch (SQLException e) {
-            System.err.println("[ERROR] Failed to fetch all reviews: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return reviews;
-    }
-
-    @Override
-    public List<Review> searchReviews(String keyword) {
-        List<Review> reviews = new ArrayList<>();
-        String query = "SELECT r.id, r.rating, r.comment, r.timestamp, u.username, c.id AS course_id, c.subject, c.number, c.title " +
-                "FROM Reviews r " +
-                "JOIN Users u ON r.user_id = u.id " +
-                "JOIN Courses c ON r.course_id = c.id " +
-                "WHERE r.comment LIKE ? OR c.title LIKE ?";
-
-        try (Connection conn = DatabaseInitializer.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
-            stmt.setString(1, "%" + keyword + "%");
-            stmt.setString(2, "%" + keyword + "%");
-
+    // Helper Methods
+    private int validateUserId(Connection conn, String username, String query) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    int reviewId = rs.getInt("id");
-                    int courseId = rs.getInt("course_id");
-                    int rating = rs.getInt("rating");
-                    String comment = rs.getString("comment");
-                    String subject = rs.getString("subject");
-                    int number = rs.getInt("number");
-                    String title = rs.getString("title");
-                    String username = rs.getString("username");
-
-                    // Create course title
-                    String courseTitle = subject + " " + number + ": " + title;
-
-                    // Create a Review object
-                    Review review = new Review(reviewId, username, courseId, courseTitle, rating, comment);
-                    reviews.add(review);
+                if (rs.next()) {
+                    return rs.getInt("id");
+                } else {
+                    throw new SQLException("User not found: " + username);
                 }
             }
-        } catch (SQLException e) {
-            System.err.println("[ERROR] Failed to search reviews: " + e.getMessage());
-            e.printStackTrace();
         }
-        return reviews;
     }
+
+    private void validateCourseId(Connection conn, int courseId, String query) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, courseId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new SQLException("Course not found: " + courseId);
+                }
+            }
+        }
+    }
+
+    private Review mapResultSetToReview(ResultSet rs) throws SQLException {
+        int reviewId = rs.getInt("id");
+        int courseId = rs.getInt("course_id");
+        int rating = rs.getInt("rating");
+        String comment = rs.getString("comment");
+        String subject = rs.getString("subject");
+        int number = rs.getInt("number");
+        String title = rs.getString("title");
+        String username = rs.getString("username");
+
+        // Combine subject and number for a meaningful course title
+        String courseTitle = subject + " " + number + ": " + title;
+
+        // Create the Review object
+        return new Review(reviewId, username, courseId, rating, comment, courseTitle);
+    }
+
 }

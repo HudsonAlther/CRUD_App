@@ -2,6 +2,7 @@ package edu.virginia.sde.controller;
 
 import edu.virginia.sde.model.Review;
 import edu.virginia.sde.service.ReviewService;
+import edu.virginia.sde.service.ReviewServiceImpl;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -32,6 +33,7 @@ public class MyReviewsController {
     @FXML
     private TableColumn<Review, String> commentColumn;
 
+
     private String username;
     private ReviewService reviewService;
 
@@ -43,17 +45,11 @@ public class MyReviewsController {
         this.username = username;
         if (reviewService != null) {
             List<Review> reviews = reviewService.getReviewsByUser(username);
-            if (reviews != null && !reviews.isEmpty()) {
-                System.out.println("[DEBUG] Number of reviews fetched for " + username + ": " + reviews.size());
-            } else {
-                System.out.println("[DEBUG] No reviews found for user: " + username);
-            }
-            updateReviewsTable(FXCollections.observableArrayList(reviews != null ? reviews : new ArrayList<>()));
+            updateReviewsTable(reviews != null ? reviews : new ArrayList<>());
         } else {
             showAlert("Error", "ReviewService is not initialized.");
         }
     }
-
 
     @FXML
     public void initialize() {
@@ -63,34 +59,43 @@ public class MyReviewsController {
         reviewsTable.setPlaceholder(new Label("No reviews available."));
     }
 
-
-
-    private void updateReviewsTable(ObservableList<Review> reviews) {
-        System.out.println("[DEBUG] Updating reviews table with " + reviews.size() + " reviews.");
-        for (Review review : reviews) {
-            System.out.println("[DEBUG] Review ID: " + review.getReviewId() + ", Course: " + review.getCourseTitle() +
-                    ", Rating: " + review.getRating() + ", Comment: " + review.getComment());
-        }
-        reviewsTable.setItems(reviews);
+    private void updateReviewsTable(List<Review> reviews) {
+        ObservableList<Review> reviewList = FXCollections.observableArrayList(reviews);
+        reviewsTable.setItems(reviewList);
     }
-
 
     @FXML
     public void handleBack(ActionEvent event) {
         try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Course Search");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Unable to navigate back to the Course Search screen. Please try again.");
+        }
+    }
+
+    @FXML
+    public void handleMyReviews(ActionEvent event) {
+        try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/MyReviewsView.fxml"));
             Parent root = loader.load();
+
             MyReviewsController myReviewsController = loader.getController();
-            myReviewsController.setUsername(username); // Make sure the username is correctly set
-            myReviewsController.setReviewService(reviewService); // Make sure the service is correctly set
+            myReviewsController.setReviewService(new ReviewServiceImpl()); // Set the ReviewService
+            myReviewsController.setUsername(username); // Set the username after initializing ReviewService
+
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("My Reviews");
             stage.show();
-
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert("Error", "Unable to navigate back to the Course Search screen. Please try again.");
+            showAlert("Error", "Failed to load the My Reviews screen.");
         }
     }
 

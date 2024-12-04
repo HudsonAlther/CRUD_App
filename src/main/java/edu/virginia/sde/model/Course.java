@@ -2,16 +2,30 @@ package edu.virginia.sde.model;
 import javafx.beans.property.*;
 
 public class Course {
+    private final IntegerProperty id; // New property for the course ID
     private final StringProperty subject;
     private final IntegerProperty number;
     private final StringProperty title;
     private final DoubleProperty averageRating;
 
-    public Course(String subject, int number, String title, double averageRating) {
+    public Course(int id, String subject, int number, String title, double averageRating) {
+        this.id = new SimpleIntegerProperty(id);
         this.subject = new SimpleStringProperty(subject);
         this.number = new SimpleIntegerProperty(number);
         this.title = new SimpleStringProperty(title);
         this.averageRating = new SimpleDoubleProperty(averageRating);
+    }
+
+    public IntegerProperty idProperty() {
+        return id;
+    }
+
+    public int getId() {
+        return id.get();
+    }
+
+    public void setId(int id) {
+        this.id.set(id);
     }
 
     public StringProperty subjectProperty() {

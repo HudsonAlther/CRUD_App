@@ -2,14 +2,14 @@ package edu.virginia.sde.reviews;
 
 import edu.virginia.sde.database.DatabaseInitializer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
-import java.util.Objects;
 
 public class CourseReviewsApplication extends Application {
 
@@ -19,24 +19,41 @@ public class CourseReviewsApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        Connection connection = DatabaseInitializer.initializeDatabase();
-        if (connection != null) {
-            DatabaseInitializer.populateSampleData(connection); // Pass connection for sample data
-        } else {
-            System.err.println("[ERROR] Database initialization failed. Exiting...");
+        // Initialize database and populate default courses
+        try (Connection connection = DatabaseInitializer.initializeDatabase()) {
+            if (connection != null) {
+                DatabaseInitializer.populateDefaultCourses(connection);
+            } else {
+                System.err.println("[ERROR] Database initialization failed. Exiting...");
+                Platform.exit();
+                return;
+            }
+        } catch (Exception e) {
+            System.err.println("[ERROR] Unexpected error during database setup: " + e.getMessage());
+            e.printStackTrace();
+            Platform.exit();
             return;
         }
 
+        // Load the LoginView FXML
         try {
             System.out.println("[INFO] Loading FXML file...");
-            Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/edu/virginia/sde/reviews/LoginView.fxml")));
+            URL fxmlResource = getClass().getResource("/edu/virginia/sde/reviews/LoginView.fxml");
+            if (fxmlResource == null) {
+                System.err.println("[ERROR] LoginView.fxml not found. Exiting application.");
+                Platform.exit();
+                return;
+            }
+            Parent root = FXMLLoader.load(fxmlResource);
             primaryStage.setTitle("Course Reviews Application - Login");
-            primaryStage.setScene(new Scene(root, 400, 300));
+            primaryStage.setScene(new Scene(root));
+            primaryStage.sizeToScene();
             primaryStage.show();
             System.out.println("[INFO] Application started successfully.");
-        } catch (IOException e) {
+        } catch (Exception e) {
+            System.err.println("[ERROR] Failed to load FXML file: " + e.getMessage());
             e.printStackTrace();
-            System.err.println("[ERROR] Failed to load FXML file.");
+            Platform.exit();
         }
     }
 }

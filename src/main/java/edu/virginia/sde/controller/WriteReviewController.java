@@ -12,6 +12,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.stage.Stage;
 
 public class WriteReviewController {
@@ -34,7 +35,19 @@ public class WriteReviewController {
 
     @FXML
     public void initialize() {
-        courseComboBox.setItems(FXCollections.observableArrayList(courseService.getAllCourses()));
+        var courses = courseService.getAllCourses();
+        if (courses.isEmpty()) {
+            showAlert("Error", "No courses available to review.");
+        }
+        courseComboBox.setItems(FXCollections.observableArrayList(courses));
+
+        // Limit ratingField to numeric input only
+        ratingField.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getText().matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        }));
     }
 
     @FXML
@@ -55,19 +68,26 @@ public class WriteReviewController {
                 return;
             }
 
-            // Extract course id and title for the review
-            String courseSubject = selectedCourse.getSubject();
-            int courseNumber = selectedCourse.getNumber();
-            int courseId = selectedCourse.getNumber();
-            String courseTitle = selectedCourse.getTitle();
+            System.out.println("[DEBUG] Submitting review for course: " +
+                    selectedCourse.getSubject() + " " +
+                    selectedCourse.getNumber() + ", Rating: " + rating + ", Comment: " + comment);
 
-            System.out.println("Submitting review for course: " + courseSubject + " " + courseNumber + " with rating: " + rating);
+            Review review = new Review(
+                    0, // reviewId
+                    username, // username
+                    selectedCourse.getId(), // courseId
+                    rating, // rating
+                    comment, // comment
+                    selectedCourse.getTitle() // courseTitle
+            );
 
-            Review review = new Review(0, username, courseId, courseTitle , rating, comment);
             boolean success = reviewService.addReview(review);
 
             if (success) {
                 showAlert("Success", "Review submitted successfully!");
+                ratingField.clear();
+                commentField.clear();
+                courseComboBox.getSelectionModel().clearSelection();
                 closeWindow();
             } else {
                 showAlert("Error", "Failed to submit review.");
@@ -77,9 +97,6 @@ public class WriteReviewController {
             showAlert("Error", "Rating must be a valid number.");
         }
     }
-
-
-
 
     @FXML
     public void handleCancel() {
