@@ -3,40 +3,21 @@ package edu.virginia.sde.controller;
 import edu.virginia.sde.model.Course;
 import edu.virginia.sde.service.CourseService;
 import edu.virginia.sde.service.CourseServiceImpl;
+import edu.virginia.sde.service.ReviewServiceImpl;
 import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.event.ActionEvent;
 
 import java.io.IOException;
 import java.util.List;
 
 public class CourseSearchController {
-
-    @FXML
-    private TableView<Course> courseTable;
-
-    private String currentUser;
-
-    private String username;
-
-    @FXML
-    private TableColumn<Course, String> subjectColumn;
-
-    @FXML
-    private TableColumn<Course, Integer> numberColumn;
-
-    @FXML
-    private TableColumn<Course, String> titleColumn;
-
-    @FXML
-    private TableColumn<Course, Double> ratingColumn;
 
     @FXML
     private TextField subjectField;
@@ -51,12 +32,30 @@ public class CourseSearchController {
     private TextField searchField;
 
     @FXML
-    private VBox addCourseForm;
+    private Button searchButton;
+
+    @FXML
+    private TableView<Course> courseTable;
+
+    @FXML
+    private TableColumn<Course, String> subjectColumn;
+
+    @FXML
+    private TableColumn<Course, Integer> numberColumn;
+
+    @FXML
+    private TableColumn<Course, String> titleColumn;
+
+    @FXML
+    private TableColumn<Course, Double> ratingColumn;
+
+    private String username;
 
     private final CourseService courseService = new CourseServiceImpl();
 
     @FXML
     public void initialize() {
+        // Bind table columns to Course properties
         subjectColumn.setCellValueFactory(cellData -> cellData.getValue().subjectProperty());
         numberColumn.setCellValueFactory(cellData -> cellData.getValue().numberProperty().asObject());
         titleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
@@ -67,8 +66,18 @@ public class CourseSearchController {
 
     @FXML
     public void handleSearch() {
-        String query = searchField.getText().trim();
-        List<Course> results = courseService.searchCourses(query, query, query);
+        String subject = subjectField.getText().trim();
+        String number = numberField.getText().trim();
+        String title = titleField.getText().trim();
+
+        List<Course> results;
+        if (!subject.isEmpty() || !number.isEmpty() || !title.isEmpty()) {
+            results = courseService.searchCourses(subject, number, title);
+        } else {
+            String query = searchField.getText().trim();
+            results = courseService.searchCourses(query, query, query);
+        }
+
         courseTable.setItems(FXCollections.observableArrayList(results));
     }
 
@@ -78,8 +87,8 @@ public class CourseSearchController {
         String number = numberField.getText().trim();
         String title = titleField.getText().trim();
 
-        if (!subject.matches("[A-Z]{2,4}") || !number.matches("\\d{4}") || title.length() < 1 || title.length() > 50) {
-            showAlert("Error", "Invalid input. Please check your data and try again.");
+        if (!subject.matches("[A-Z]{2,4}") || !number.matches("\\d{4}") || title.isEmpty() || title.length() > 50) {
+            showAlert("Error", "Invalid input. Please ensure:\n- Subject is 2-4 letters\n- Number is 4 digits\n- Title is 1-50 characters");
             return;
         }
 
@@ -90,6 +99,43 @@ public class CourseSearchController {
             refreshCourseTable();
         } else {
             showAlert("Error", "Failed to add course. It may already exist.");
+        }
+    }
+
+    @FXML
+    public void handleMyReviews(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/MyReviewsView.fxml"));
+            Parent root = loader.load();
+
+            MyReviewsController myReviewsController = loader.getController();
+            myReviewsController.setReviewService(new ReviewServiceImpl());
+            myReviewsController.setUsername(username);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("My Reviews");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to load the My Reviews screen.");
+        }
+    }
+
+
+    @FXML
+    public void handleLogout(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/LoginView.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Login");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to load the Login screen.");
         }
     }
 
@@ -105,46 +151,8 @@ public class CourseSearchController {
         alert.showAndWait();
     }
 
-    public void setCurrentUser(String username) {
-        this.currentUser = username;
-    }
-
-    public void handleLogout(javafx.event.ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/view/LoginView.fxml"));
-            Parent root = loader.load();
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Login");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("Error", "Failed to load the Login screen.");
-        }
-    }
-    @FXML
-    public void handleMyReviews(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/view/MyReviewsView.fxml"));
-            Parent root = loader.load();
-
-            MyReviewsController myReviewsController = loader.getController();
-            myReviewsController.setUsername(username);
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("My Reviews");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("Error", "Failed to load the My Reviews screen.");
-        }
-    }
-
     public void setUsername(String username) {
         this.username = username;
         System.out.println("Logged-in user: " + username);
     }
-
 }

@@ -11,12 +11,15 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+
 
 public class MyReviewsController {
 
@@ -38,7 +41,12 @@ public class MyReviewsController {
 
     public void setUsername(String username) {
         this.username = username;
-        updateReviewsTable(reviewService.getReviewsByUser(username));
+        if (reviewService != null) {
+            List<Review> reviews = reviewService.getReviewsByUser(username);
+            updateReviewsTable(reviews != null ? reviews : new ArrayList<>());
+        } else {
+            showAlert("Error", "ReviewService is not initialized.");
+        }
     }
 
     @FXML
@@ -46,6 +54,7 @@ public class MyReviewsController {
         courseColumn.setCellValueFactory(cellData -> cellData.getValue().courseProperty());
         ratingColumn.setCellValueFactory(cellData -> cellData.getValue().ratingProperty().asObject());
         commentColumn.setCellValueFactory(cellData -> cellData.getValue().commentProperty());
+        reviewsTable.setPlaceholder(new Label("No reviews available."));
     }
 
     private void updateReviewsTable(List<Review> reviews) {
@@ -56,14 +65,25 @@ public class MyReviewsController {
     @FXML
     public void handleBack(ActionEvent event) {
         try {
-            Parent courseSearchRoot = FXMLLoader.load(getClass().getResource("/edu/virginia/sde/view/CourseSearchView.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
+            Parent root = loader.load();
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(courseSearchRoot));
+            stage.setScene(new Scene(root));
             stage.setTitle("Course Search");
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert("Error", "Failed to load the Course Search screen.");
+            showAlert("Error", "Unable to navigate back to the Course Search screen. Please try again.");
+        }
+    }
+
+    @FXML
+    public void handleMyReviews(ActionEvent event) {
+        if (reviewService != null && username != null) {
+            List<Review> reviews = reviewService.getReviewsByUser(username);
+            updateReviewsTable(reviews != null ? reviews : new ArrayList<>());
+        } else {
+            showAlert("Error", "Unable to fetch reviews. Please try again.");
         }
     }
 
