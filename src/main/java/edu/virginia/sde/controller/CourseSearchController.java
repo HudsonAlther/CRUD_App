@@ -92,7 +92,8 @@ public class CourseSearchController {
             return;
         }
 
-        Course course = new Course(subject, Integer.parseInt(number), title, 0.0);
+        Course course = new Course(0, subject, Integer.parseInt(number), title, 0.0);
+
 
         if (courseService.addCourse(course)) {
             showAlert("Success", "Course added successfully!");
