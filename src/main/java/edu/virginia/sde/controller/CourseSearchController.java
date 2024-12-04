@@ -1,41 +1,48 @@
 package edu.virginia.sde.controller;
-import edu.virginia.sde.model.*;
-import edu.virginia.sde.service.*;
+
+import edu.virginia.sde.model.Course;
+import edu.virginia.sde.service.CourseService;
 import edu.virginia.sde.service.CourseServiceImpl;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.fxml.FXMLLoader;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 
 public class CourseSearchController {
 
     @FXML
-    private TextField subjectField;
-    @FXML
-    private TextField numberField;
-    @FXML
-    private TextField titleField;
-    @FXML
     private TableView<Course> courseTable;
+
+    private String currentUser;
+
     @FXML
     private TableColumn<Course, String> subjectColumn;
+
     @FXML
     private TableColumn<Course, Integer> numberColumn;
+
     @FXML
     private TableColumn<Course, String> titleColumn;
+
     @FXML
     private TableColumn<Course, Double> ratingColumn;
+
+    @FXML
+    private TextField subjectField;
+
+    @FXML
+    private TextField numberField;
+
+    @FXML
+    private TextField titleField;
+
+    @FXML
+    private TextField searchField;
+
+    @FXML
+    private VBox addCourseForm;
 
     private final CourseService courseService = new CourseServiceImpl();
 
@@ -46,101 +53,50 @@ public class CourseSearchController {
         titleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         ratingColumn.setCellValueFactory(cellData -> cellData.getValue().averageRatingProperty().asObject());
 
-        updateCourseTable(courseService.getAllCourses());
+        refreshCourseTable();
     }
 
     @FXML
-    public void handleSearch(ActionEvent event) {
-        String subject = subjectField.getText().trim();
+    public void handleSearch() {
+        String query = searchField.getText().trim();
+        List<Course> results = courseService.searchCourses(query, query, query);
+        courseTable.setItems(FXCollections.observableArrayList(results));
+    }
+
+    @FXML
+    public void handleAddCourse() {
+        String subject = subjectField.getText().trim().toUpperCase();
         String number = numberField.getText().trim();
         String title = titleField.getText().trim();
-        List<Course> filteredCourses = courseService.searchCourses(subject, number, title);
-        updateCourseTable(filteredCourses);
-    }
 
+        if (!subject.matches("[A-Z]{2,4}") || !number.matches("\\d{4}") || title.length() < 1 || title.length() > 50) {
+            showAlert("Error", "Invalid input. Please check your data and try again.");
+            return;
+        }
 
-    @FXML
-    public void handleAddCourse(ActionEvent event) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Add New Course");
-        dialog.setHeaderText("Enter Course Details");
+        Course course = new Course(subject, Integer.parseInt(number), title, 0.0);
 
-        // Create input fields
-        TextField subjectField = new TextField();
-        subjectField.setPromptText("Subject (e.g., CS)");
-        TextField numberField = new TextField();
-        numberField.setPromptText("Course Number (e.g., 3140)");
-        TextField titleField = new TextField();
-        titleField.setPromptText("Course Title");
-
-        // Layout for input fields
-        VBox vbox = new VBox(10);
-        vbox.getChildren().addAll(
-                new Label("Subject:"), subjectField,
-                new Label("Number:"), numberField,
-                new Label("Title:"), titleField
-        );
-        dialog.getDialogPane().setContent(vbox);
-
-        // Add buttons
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                String subject = subjectField.getText().trim();
-                String number = numberField.getText().trim();
-                String title = titleField.getText().trim();
-
-                if (!subject.isEmpty() && !number.isEmpty() && !title.isEmpty()) {
-                    try {
-                        int courseNumber = Integer.parseInt(number);
-                        Course newCourse = new Course(subject, courseNumber, title, 0.0);
-                        boolean added = courseService.addCourse(newCourse);
-                        if (added) {
-                            updateCourseTable(courseService.getAllCourses());
-                        } else {
-                            System.out.println("Failed to add course. Course might already exist.");
-                        }
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid course number. Must be an integer.");
-                    }
-                } else {
-                    System.out.println("All fields must be filled.");
-                }
-            }
-        });
-    }
-
-
-    @FXML
-    public void handleMyReviews(ActionEvent event) {
-        try {
-            Parent myReviewsRoot = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/edu/virginia/sde/resources/MyReviewsView.fxml")));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(myReviewsRoot, 600, 400));
-            stage.setTitle("My Reviews");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (courseService.addCourse(course)) {
+            showAlert("Success", "Course added successfully!");
+            refreshCourseTable();
+        } else {
+            showAlert("Error", "Failed to add course. It may already exist.");
         }
     }
 
-    @FXML
-    public void handleLogout(ActionEvent event) {
-        try {
-            Parent loginRoot = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/edu/virginia/sde/hw6/gui/LoginView.fxml")));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(loginRoot, 400, 300));
-            stage.setTitle("Course Reviews Application - Login");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void refreshCourseTable() {
+        List<Course> courses = courseService.getAllCourses();
+        courseTable.setItems(FXCollections.observableArrayList(courses));
     }
 
-    private void updateCourseTable(List<Course> courses) {
-        ObservableList<Course> courseList = FXCollections.observableArrayList(courses);
-        courseTable.setItems(courseList);
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
+    public void setCurrentUser(String username) {
+        this.currentUser = username;
+    }
 }
