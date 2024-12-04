@@ -71,19 +71,37 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public boolean addReview(Review review) {
-        String query = "INSERT INTO Reviews (user_id, course_id, rating, comment, timestamp) " +
-                "VALUES ((SELECT id FROM Users WHERE username = ?), ?, ?, ?, DATETIME('now'))";
+        String getUserIdQuery = "SELECT id FROM Users WHERE username = ?";
+        String insertReviewQuery = "INSERT INTO Reviews (user_id, course_id, rating, comment, timestamp) " +
+                "VALUES (?, ?, ?, ?, DATETIME('now'))";
 
-        try (Connection conn = DatabaseInitializer.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DatabaseInitializer.getConnection()) {
+            int userId;
 
-            stmt.setString(1, review.getUsername());
-            stmt.setInt(2, review.getCourseId());
-            stmt.setInt(3, review.getRating());
-            stmt.setString(4, review.getComment());
+            // Step 1: Resolve user_id
+            try (PreparedStatement userStmt = conn.prepareStatement(getUserIdQuery)) {
+                userStmt.setString(1, review.getUsername());
+                try (ResultSet rs = userStmt.executeQuery()) {
+                    if (rs.next()) {
+                        userId = rs.getInt("id");
+                    } else {
+                        System.err.println("[ERROR] Username not found: " + review.getUsername());
+                        return false; // Fail if user doesn't exist
+                    }
+                }
+            }
 
-            int affectedRows = stmt.executeUpdate();
-            return affectedRows > 0;
+            // Step 2: Insert the review
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertReviewQuery)) {
+                insertStmt.setInt(1, userId);
+                insertStmt.setInt(2, review.getCourseId());
+                insertStmt.setInt(3, review.getRating());
+                insertStmt.setString(4, review.getComment());
+
+                int affectedRows = insertStmt.executeUpdate();
+                System.out.println("[DEBUG] Inserted review. Affected rows: " + affectedRows);
+                return affectedRows > 0;
+            }
 
         } catch (SQLException e) {
             System.err.println("[ERROR] Failed to add review: " + e.getMessage());
@@ -91,6 +109,7 @@ public class ReviewServiceImpl implements ReviewService {
             return false;
         }
     }
+
 
 
     @Override
