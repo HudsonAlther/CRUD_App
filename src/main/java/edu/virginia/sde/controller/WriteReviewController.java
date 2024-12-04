@@ -34,7 +34,6 @@ public class WriteReviewController {
 
     @FXML
     public void initialize() {
-        // Populate the course dropdown with available courses
         courseComboBox.setItems(FXCollections.observableArrayList(courseService.getAllCourses()));
     }
 
@@ -56,10 +55,18 @@ public class WriteReviewController {
                 return;
             }
 
+            // Extract course id and title for the review
             String courseSubject = selectedCourse.getSubject();
-            Review review = new Review(0, username, selectedCourse.getTitle(), rating, comment);
+            int courseNumber = selectedCourse.getNumber();
+            int courseId = selectedCourse.getNumber();
+            String courseTitle = selectedCourse.getTitle();
+
+            System.out.println("Submitting review for course: " + courseSubject + " " + courseNumber + " with rating: " + rating);
+
+            Review review = new Review(0, username, courseId, courseTitle , rating, comment);
             boolean success = reviewService.addReview(review);
-            if (reviewService.addReview(review)) {
+
+            if (success) {
                 showAlert("Success", "Review submitted successfully!");
                 closeWindow();
             } else {
@@ -70,6 +77,7 @@ public class WriteReviewController {
             showAlert("Error", "Rating must be a valid number.");
         }
     }
+
 
 
 

@@ -43,11 +43,17 @@ public class MyReviewsController {
         this.username = username;
         if (reviewService != null) {
             List<Review> reviews = reviewService.getReviewsByUser(username);
-            updateReviewsTable(reviews != null ? reviews : new ArrayList<>());
+            if (reviews != null && !reviews.isEmpty()) {
+                System.out.println("[DEBUG] Number of reviews fetched for " + username + ": " + reviews.size());
+            } else {
+                System.out.println("[DEBUG] No reviews found for user: " + username);
+            }
+            updateReviewsTable(FXCollections.observableArrayList(reviews != null ? reviews : new ArrayList<>()));
         } else {
             showAlert("Error", "ReviewService is not initialized.");
         }
     }
+
 
     @FXML
     public void initialize() {
@@ -57,35 +63,37 @@ public class MyReviewsController {
         reviewsTable.setPlaceholder(new Label("No reviews available."));
     }
 
-    private void updateReviewsTable(List<Review> reviews) {
-        ObservableList<Review> reviewList = FXCollections.observableArrayList(reviews);
-        reviewsTable.setItems(reviewList);
+
+
+    private void updateReviewsTable(ObservableList<Review> reviews) {
+        System.out.println("[DEBUG] Updating reviews table with " + reviews.size() + " reviews.");
+        for (Review review : reviews) {
+            System.out.println("[DEBUG] Review ID: " + review.getReviewId() + ", Course: " + review.getCourseTitle() +
+                    ", Rating: " + review.getRating() + ", Comment: " + review.getComment());
+        }
+        reviewsTable.setItems(reviews);
     }
+
 
     @FXML
     public void handleBack(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/MyReviewsView.fxml"));
             Parent root = loader.load();
+            MyReviewsController myReviewsController = loader.getController();
+            myReviewsController.setUsername(username); // Make sure the username is correctly set
+            myReviewsController.setReviewService(reviewService); // Make sure the service is correctly set
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Course Search");
+            stage.setTitle("My Reviews");
             stage.show();
+
         } catch (IOException e) {
             e.printStackTrace();
             showAlert("Error", "Unable to navigate back to the Course Search screen. Please try again.");
         }
     }
 
-    @FXML
-    public void handleMyReviews(ActionEvent event) {
-        if (reviewService != null && username != null) {
-            List<Review> reviews = reviewService.getReviewsByUser(username);
-            updateReviewsTable(reviews != null ? reviews : new ArrayList<>());
-        } else {
-            showAlert("Error", "Unable to fetch reviews. Please try again.");
-        }
-    }
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

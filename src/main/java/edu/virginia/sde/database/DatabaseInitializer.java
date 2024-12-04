@@ -104,4 +104,19 @@ public class DatabaseInitializer {
             e.printStackTrace();
         }
     }
+
+    public static Connection getConnection() {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            return DriverManager.getConnection(DB_URL);
+        } catch (SQLException e) {
+            System.err.println("[ERROR] Failed to connect to the database: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        } catch (ClassNotFoundException e) {
+            System.err.println("[ERROR] SQLite JDBC driver not found: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

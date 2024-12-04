@@ -81,4 +81,10 @@ public class Course {
         result = 31 * result + title.get().toLowerCase().hashCode();
         return result;
     }
+
+    @Override
+    public String toString() {
+        return subject.get() + " " + number.get() + ": " + title.get();
+    }
+
 }
