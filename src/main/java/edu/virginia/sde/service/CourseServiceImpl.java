@@ -99,7 +99,9 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public Course getCourseById(int courseId) {
-        String query = "SELECT id, subject, number, title, (SELECT AVG(rating) FROM Reviews WHERE course_id = Courses.id) AS averageRating FROM Courses WHERE id = ?";
+        String query = "SELECT subject, number, title, " +
+                "(SELECT ROUND(AVG(rating), 2) FROM Reviews WHERE course_id = Courses.id) AS averageRating " +
+                "FROM Courses WHERE id = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(query)) {

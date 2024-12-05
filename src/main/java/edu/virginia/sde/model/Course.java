@@ -1,5 +1,11 @@
 package edu.virginia.sde.model;
+import edu.virginia.sde.database.DatabaseInitializer;
 import javafx.beans.property.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class Course {
     private final IntegerProperty id; // New property for the course ID
@@ -100,5 +106,30 @@ public class Course {
     public String toString() {
         return subject.get() + " " + number.get() + ": " + title.get();
     }
+
+    public String getFormattedAverageRating() {
+        return String.format("%.2f", averageRating.get());
+    }
+    public void refreshAverageRating() {
+        String query = "SELECT ROUND(AVG(rating), 2) AS averageRating " +
+                "FROM Reviews WHERE course_id = ?";
+        try (Connection conn = DatabaseInitializer.getConnection()) {
+            assert conn != null;
+            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+                pstmt.setInt(1, this.getId()); // Assuming getId() returns the course's ID
+                ResultSet rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    double newAverage = rs.getDouble("averageRating");
+                    this.setAverageRating(newAverage); // Assuming setAverageRating() updates the property
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[ERROR] Failed to refresh average rating: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
 }

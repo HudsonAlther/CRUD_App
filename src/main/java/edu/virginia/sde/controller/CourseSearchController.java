@@ -107,10 +107,6 @@ public class CourseSearchController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/MyReviewsView.fxml"));
             Parent root = loader.load();
-
-            // Check username before navigating
-            System.out.println("[DEBUG] Current username in SessionManager: " + SessionManager.getUsername());
-
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("My Reviews");
@@ -120,6 +116,8 @@ public class CourseSearchController {
             showAlert("Error", "Failed to load the My Reviews screen.");
         }
     }
+
+
 
 
 

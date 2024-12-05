@@ -8,6 +8,7 @@ import edu.virginia.sde.service.ReviewServiceImpl;
 import edu.virginia.sde.service.CourseService;
 import edu.virginia.sde.service.CourseServiceImpl;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
@@ -15,6 +16,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.stage.Stage;
+
+import javax.security.auth.Refreshable;
 
 public class WriteReviewController {
 
@@ -51,18 +54,12 @@ public class WriteReviewController {
         }));
     }
 
+
     @FXML
     public void handleSubmitReview() {
         Course selectedCourse = courseComboBox.getSelectionModel().getSelectedItem();
         String ratingText = ratingField.getText();
         String comment = commentField.getText();
-
-        String username = SessionManager.getUsername();
-        if (username == null || username.isEmpty()) {
-            showAlert("Error", "No username found. Please log in again.");
-            return;
-        }
-
 
         if (selectedCourse == null || ratingText.isEmpty() || comment.isEmpty()) {
             showAlert("Error", "Please fill in all fields.");
@@ -76,26 +73,12 @@ public class WriteReviewController {
                 return;
             }
 
-            System.out.println("[DEBUG] Submitting review for course: " +
-                    selectedCourse.getSubject() + " " +
-                    selectedCourse.getNumber() + ", Rating: " + rating + ", Comment: " + comment);
-
-            Review review = new Review(
-                    0, // reviewId
-                    username, // username
-                    selectedCourse.getId(), // courseId
-                    rating, // rating
-                    comment, // comment
-                    selectedCourse.getTitle() // courseTitle
-            );
-
+            Review review = new Review(0, SessionManager.getUsername(), selectedCourse.getId(), rating, comment, selectedCourse.getTitle());
             boolean success = reviewService.addReview(review);
 
             if (success) {
                 showAlert("Success", "Review submitted successfully!");
-                ratingField.clear();
-                commentField.clear();
-                courseComboBox.getSelectionModel().clearSelection();
+                refresh();
                 closeWindow();
             } else {
                 showAlert("Error", "Failed to submit review.");
@@ -105,6 +88,7 @@ public class WriteReviewController {
             showAlert("Error", "Rating must be a valid number.");
         }
     }
+
 
     @FXML
     public void handleCancel() {
@@ -122,4 +106,21 @@ public class WriteReviewController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    private void refresh() {
+        Course selectedCourse = courseComboBox.getSelectionModel().getSelectedItem();
+
+        if (selectedCourse != null) {
+            // Refresh the course's average rating
+            selectedCourse.refreshAverageRating();
+
+            // Update the ComboBox display
+            courseComboBox.setItems(FXCollections.observableArrayList(courseService.getAllCourses()));
+
+            // Re-select the updated course
+            courseComboBox.getSelectionModel().select(selectedCourse);
+        }
+    }
+
+
 }
