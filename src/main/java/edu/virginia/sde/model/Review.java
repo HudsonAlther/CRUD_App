@@ -8,7 +8,6 @@ public class Review {
     private final IntegerProperty courseId;
     private final IntegerProperty rating;
     private final StringProperty comment;
-
     private final StringProperty courseTitle; // New property for course title
 
     public Review(int reviewId, String username, int courseId, int rating, String comment, String courseTitle) {
@@ -21,7 +20,7 @@ public class Review {
     }
 
     // Property getter for JavaFX bindings
-    public StringProperty courseProperty() {
+    public StringProperty courseTitleProperty() {
         return courseTitle;
     }
 
@@ -92,6 +91,11 @@ public class Review {
 
     public void setComment(String comment) {
         this.comment.set(comment);
+    }
+
+    // Updated getUserId method to return username as user ID
+    public String getUserId() {
+        return getUsername();
     }
 
     @Override
