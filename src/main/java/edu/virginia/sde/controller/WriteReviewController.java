@@ -7,9 +7,14 @@ import edu.virginia.sde.service.ReviewService;
 import edu.virginia.sde.service.ReviewServiceImpl;
 import edu.virginia.sde.service.CourseService;
 import edu.virginia.sde.service.CourseServiceImpl;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
@@ -18,6 +23,7 @@ import javafx.scene.control.TextFormatter;
 import javafx.stage.Stage;
 
 import javax.security.auth.Refreshable;
+import java.io.IOException;
 
 public class WriteReviewController {
 
@@ -44,8 +50,6 @@ public class WriteReviewController {
             showAlert("Error", "No courses available to review.");
         }
         courseComboBox.setItems(FXCollections.observableArrayList(courses));
-
-        // Limit ratingField to numeric input only
         ratingField.setTextFormatter(new TextFormatter<>(change -> {
             if (change.getText().matches("[0-9]*")) {
                 return change;
@@ -61,7 +65,7 @@ public class WriteReviewController {
         String ratingText = ratingField.getText();
         String comment = commentField.getText();
 
-        if (selectedCourse == null || ratingText.isEmpty() || comment.isEmpty()) {
+        if (selectedCourse == null || ratingText.isEmpty()) {
             showAlert("Error", "Please fill in all fields.");
             return;
         }
@@ -78,8 +82,9 @@ public class WriteReviewController {
 
             if (success) {
                 showAlert("Success", "Review submitted successfully!");
+                ratingField.clear();
+                commentField.clear();
                 refresh();
-                closeWindow();
             } else {
                 showAlert("Error", "Failed to submit review.");
             }
@@ -119,6 +124,21 @@ public class WriteReviewController {
 
             // Re-select the updated course
             courseComboBox.getSelectionModel().select(selectedCourse);
+        }
+    }
+
+    @FXML
+    private void handleBack(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Course Search");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to navigate back to the Course Search screen.");
         }
     }
 

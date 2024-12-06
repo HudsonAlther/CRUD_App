@@ -8,5 +8,5 @@
     <TextField fx:id="ratingField" promptText="Rating (1-5)" />
     <TextArea fx:id="commentField" promptText="Write your review here..." prefHeight="100" />
     <Button text="Submit" onAction="#handleSubmitReview" />
-    <Button text="Cancel" onAction="#handleCancel" />
+    <Button text="Cancel" onAction="#handleBack" />
 </VBox>

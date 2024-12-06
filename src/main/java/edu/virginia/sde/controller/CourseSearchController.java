@@ -15,7 +15,6 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 
 public class CourseSearchController {
@@ -47,24 +46,22 @@ public class CourseSearchController {
     @FXML
     private TableColumn<Course, Double> ratingColumn;
 
-    private final CourseService courseService = new CourseServiceImpl();
     @FXML
     private TableColumn<Course, Void> viewReviewsColumn = new TableColumn<>("Reviews");
 
+    private final CourseService courseService = new CourseServiceImpl();
     private String username;
 
     @FXML
     public void initialize() {
-        // Bind table columns to Course properties
         subjectColumn.setCellValueFactory(cellData -> cellData.getValue().subjectProperty());
         numberColumn.setCellValueFactory(cellData -> cellData.getValue().numberProperty().asObject());
         titleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         ratingColumn.setCellValueFactory(cellData -> cellData.getValue().averageRatingProperty().asObject());
-
         addViewReviewsButtonToTable();
-
         refreshCourseTable();
     }
+
 
     private void addViewReviewsButtonToTable() {
         Callback<TableColumn<Course, Void>, TableCell<Course, Void>> cellFactory = new Callback<>() {
@@ -74,7 +71,7 @@ public class CourseSearchController {
                     private final Button btn = new Button("View Reviews");
 
                     {
-                        btn.setOnAction((ActionEvent event) -> {
+                        btn.setOnAction(event -> {
                             Course course = getTableView().getItems().get(getIndex());
                             handleViewReviews(course);
                         });
@@ -96,53 +93,19 @@ public class CourseSearchController {
         viewReviewsColumn.setCellFactory(cellFactory);
     }
 
-
-
-
     private void handleViewReviews(Course course) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseReviewsView.fxml"));
-
-            // Debugging output for FXML resource loading
-            URL resource = getClass().getResource("/edu/virginia/sde/reviews/CourseReviewsView.fxml");
-            if (resource == null) {
-                System.err.println("[ERROR] Could not locate CourseReviewsView.fxml!");
-                return;
-            } else {
-                System.out.println("[INFO] Loading FXML file from: " + resource);
-            }
             Parent root = loader.load();
             edu.virginia.sde.reviews.CourseReviewsController controller = loader.getController();
-            if (controller != null) {
-                controller.setCourse(course);
-            } else {
-                throw new IllegalStateException("CourseReviewsController could not be initialized properly.");
-            }
-            Stage stage = new Stage();
+            controller.setCourse(course);
+            Stage stage = (Stage) courseTable.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Reviews for " + course.getTitle());
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
             showAlert("Error", "Failed to load the Course Reviews screen. Please check the FXML path and content.");
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-            showAlert("Error", "Failed to initialize the Course Reviews screen properly.");
-        }
-    }
-
-
-    public void handleViewReviews(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseReviewsView.fxml"));
-            Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Course Reviews");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("Error", "Failed to load the Course Reviews screen.");
         }
     }
 
@@ -189,15 +152,10 @@ public class CourseSearchController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/MyReviewsView.fxml"));
             Parent root = loader.load();
-
-            // Assuming MyReviewsController has a setUsername() method
             MyReviewsController controller = loader.getController();
             controller.setUsername(username);
+            changeScene(event, root, "My Reviews");
 
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("My Reviews");
-            stage.show();
         } catch (IOException e) {
             e.printStackTrace();
             showAlert("Error", "Failed to load the My Reviews screen.");
@@ -209,11 +167,7 @@ public class CourseSearchController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/LoginView.fxml"));
             Parent root = loader.load();
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Login");
-            stage.show();
+            changeScene(event, root, "Login");
         } catch (IOException e) {
             e.printStackTrace();
             showAlert("Error", "Failed to load the Login screen.");
@@ -245,14 +199,18 @@ public class CourseSearchController {
 
             WriteReviewController writeReviewController = loader.getController();
             writeReviewController.setUsername(username);
-
-            Stage stage = new Stage();
-            stage.setTitle("Write Review");
-            stage.setScene(new Scene(root));
-            stage.show();
+            changeScene(event, root, "Write Review");
         } catch (IOException e) {
             e.printStackTrace();
             showAlert("Error", "Failed to load the Write Review screen.");
         }
     }
+
+    private void changeScene(ActionEvent event, Parent root, String title) {
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.setScene(new Scene(root));
+        stage.setTitle(title);
+        stage.show();
+    }
+
 }

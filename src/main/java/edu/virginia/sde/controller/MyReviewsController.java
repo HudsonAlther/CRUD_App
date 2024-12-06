@@ -37,12 +37,9 @@ public class MyReviewsController {
 
     @FXML
     public void initialize() {
-        // Set up columns
         courseColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCourseTitle()));
         ratingColumn.setCellValueFactory(cellData -> cellData.getValue().ratingProperty().asObject());
         commentColumn.setCellValueFactory(cellData -> cellData.getValue().commentProperty());
-
-        // Add actions column for "Edit" and "Delete"
         TableColumn<Review, Void> actionsColumn = new TableColumn<>("Actions");
         actionsColumn.setCellFactory(col -> new TableCell<>() {
             private final Button editButton = new Button("Edit");
@@ -64,10 +61,7 @@ public class MyReviewsController {
                 }
             }
         });
-
         reviewsTable.getColumns().add(actionsColumn);
-
-        // Load reviews
         refreshReviews();
     }
 
@@ -82,7 +76,6 @@ public class MyReviewsController {
             } else {
                 reviews.forEach(review -> System.out.println("[DEBUG] Fetched review: " + review));
             }
-
             reviewsTable.setItems(FXCollections.observableArrayList(reviews));
         } else {
             showAlert("Error", "No username found. Please log in again.");
@@ -168,16 +161,14 @@ public class MyReviewsController {
     }
 
     public void setUsername(String username) {
-        this.username = username;
-
         if (username == null || username.isEmpty()) {
-            showAlert("Error", "Username cannot be null or empty.");
+            System.out.println("[ERROR] Attempted to set empty or null username in MyReviewsController.");
             return;
         }
 
+        this.username = username;
         System.out.println("[DEBUG] Fetching reviews for user: " + username);
 
-        // Fetch the reviews for the specified user
         List<Review> reviews = reviewService.getReviewsByUser(username);
 
         if (reviews != null) {
@@ -189,6 +180,7 @@ public class MyReviewsController {
             reviewsTable.setItems(FXCollections.observableArrayList());
         }
     }
+
 
     public void setReviewService(ReviewService reviewService) {
         this.reviewService = reviewService;

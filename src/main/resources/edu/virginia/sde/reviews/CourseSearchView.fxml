@@ -30,6 +30,5 @@
         <Button fx:id="myReviewsButton" text="My Reviews" onAction="#handleMyReviews" />
         <Button fx:id="logoutButton" text="Log Out" onAction="#handleLogout" />
         <Button fx:id="writeReviewButton" text="Write Review" onAction="#handleWriteReview" />
-        <Button fx:id="viewReviewsButton" text="View Reviews" onAction="#handleViewReviews" />
     </HBox>
 </VBox>
