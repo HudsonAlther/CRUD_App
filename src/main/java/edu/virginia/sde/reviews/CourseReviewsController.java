@@ -15,6 +15,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -29,6 +31,8 @@ public class CourseReviewsController {
     @FXML private TableColumn<Review, String> commentColumn;
     @FXML private TableColumn<Review, String> timestampColumn;
     @FXML private Label averageRatingLabel;
+    private int courseId;
+
 
     @FXML private TextField ratingInput;
     @FXML private TextField commentInput;
@@ -36,25 +40,105 @@ public class CourseReviewsController {
     private ObservableList<Review> reviews = FXCollections.observableArrayList();
     private final String currentUserId = SessionManager.getUsername();
     private final ReviewService reviewService = new ReviewServiceImpl();
+    @FXML private TableColumn<Review, Void> actionsColumn;
 
     @FXML
     public void initialize() {
-        // Initialize table columns
         ratingColumn.setCellValueFactory(new PropertyValueFactory<>("rating"));
         commentColumn.setCellValueFactory(new PropertyValueFactory<>("comment"));
         timestampColumn.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
 
+        addActionsColumn();
         updateAverageRating();
     }
 
-    public void setCourse(Course course) {
-        // Load reviews from the service
-        reviews = FXCollections.observableArrayList(reviewService.getReviewsByCourseId(course.getId()));
-        reviewsTable.setItems(reviews);
 
-        String courseNumberStr = String.valueOf(course.getNumber());
-        setCourseDetails(course.getSubject(), courseNumberStr, course.getTitle());
+    private void addActionsColumn() {
+        actionsColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button editButton = new Button("Edit");
+            private final Button deleteButton = new Button("Delete");
+
+            {
+                editButton.setOnAction(event -> handleEdit(getTableRow().getItem()));
+                deleteButton.setOnAction(event -> handleDelete(getTableRow().getItem()));
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    HBox buttons = new HBox(5, editButton, deleteButton);
+                    setGraphic(buttons);
+                }
+            }
+        });
+    }
+    private void handleEdit(Review review) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit Review");
+        dialog.setHeaderText("Edit your review for " + review.getCourseTitle());
+
+        TextField commentField = new TextField(review.getComment());
+        TextField ratingField = new TextField(String.valueOf(review.getRating()));
+
+        VBox vbox = new VBox(10, new Label("Comment:"), commentField, new Label("Rating:"), ratingField);
+        dialog.getDialogPane().setContent(vbox);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    int newRating = Integer.parseInt(ratingField.getText().trim());
+                    String newComment = commentField.getText().trim();
+
+                    if (newRating < 1 || newRating > 5) {
+                        showAlert("Error", "Rating must be between 1 and 5.");
+                        return;
+                    }
+
+                    review.setRating(newRating);
+                    review.setComment(newComment);
+
+                    if (reviewService.updateReview(review)) {
+                        refreshReviews();
+                    } else {
+                        showAlert("Error", "Failed to update review.");
+                    }
+                } catch (NumberFormatException e) {
+                    showAlert("Error", "Rating must be a valid integer.");
+                }
+            }
+        });
+    }
+    private void handleDelete(Review review) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this review?");
+        confirm.setHeaderText("Delete Review");
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                if (reviewService.deleteReview(review.getReviewId(), SessionManager.getUsername())) {
+                    refreshReviews();
+                } else {
+                    showAlert("Error", "Failed to delete review.");
+                }
+            }
+        });
+    }
+
+    private void refreshReviews() {
+        List<Review> reviewsList = reviewService.getReviewsByCourseId(courseId);
+        reviewsTable.setItems(FXCollections.observableArrayList(reviewsList));
         updateAverageRating();
+    }
+
+
+
+
+    public void setCourse(Course course) {
+        this.courseId = course.getId();
+        setCourseDetails(course.getSubject(), String.valueOf(course.getNumber()), course.getTitle());
+        refreshReviews();
     }
 
     @FXML
@@ -130,4 +214,17 @@ public class CourseReviewsController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    @FXML
+    private void handleEditReview() {
+        Review selectedReview = reviewsTable.getSelectionModel().getSelectedItem();
+        if (selectedReview != null) {
+            ratingInput.setText(String.valueOf(selectedReview.getRating()));
+            commentInput.setText(selectedReview.getComment());
+            reviews.remove(selectedReview);
+        } else {
+            showAlert("No Selection", "Please select a review to edit.");
+        }
+    }
+
 }

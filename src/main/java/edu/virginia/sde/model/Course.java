@@ -1,6 +1,7 @@
 package edu.virginia.sde.model;
 import edu.virginia.sde.database.DatabaseInitializer;
 import javafx.beans.property.*;
+import javafx.scene.input.Mnemonic;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Course {
-    private final IntegerProperty id; // New property for the course ID
+    private final IntegerProperty id;
     private final StringProperty subject;
     private final IntegerProperty number;
     private final StringProperty title;
@@ -130,6 +131,7 @@ public class Course {
             e.printStackTrace();
         }
     }
+
 
 
 }

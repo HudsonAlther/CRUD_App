@@ -67,15 +67,8 @@ public class MyReviewsController {
 
     private void refreshReviews() {
         String username = SessionManager.getUsername();
-        System.out.println("[DEBUG] Refreshing reviews for username: " + username);
-
         if (username != null && !username.isEmpty()) {
             List<Review> reviews = reviewService.getReviewsByUser(username);
-            if (reviews.isEmpty()) {
-                System.out.println("[DEBUG] No reviews found for username: " + username);
-            } else {
-                reviews.forEach(review -> System.out.println("[DEBUG] Fetched review: " + review));
-            }
             reviewsTable.setItems(FXCollections.observableArrayList(reviews));
         } else {
             showAlert("Error", "No username found. Please log in again.");

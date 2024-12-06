@@ -116,13 +116,8 @@ public class WriteReviewController {
         Course selectedCourse = courseComboBox.getSelectionModel().getSelectedItem();
 
         if (selectedCourse != null) {
-            // Refresh the course's average rating
             selectedCourse.refreshAverageRating();
-
-            // Update the ComboBox display
             courseComboBox.setItems(FXCollections.observableArrayList(courseService.getAllCourses()));
-
-            // Re-select the updated course
             courseComboBox.getSelectionModel().select(selectedCourse);
         }
     }

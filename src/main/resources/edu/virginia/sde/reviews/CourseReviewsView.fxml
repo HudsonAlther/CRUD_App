@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 
 <VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.virginia.sde.reviews.CourseReviewsController">
     <Label fx:id="titleLabel" text="Course Reviews" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
-    <TableView fx:id="reviewsTable">
+    <Label fx:id="averageRatingLabel" text="Average Rating: 0.00" />
+
+    <TableView fx:id="reviewsTable" prefHeight="400">
         <columns>
             <TableColumn fx:id="ratingColumn" text="Rating" />
             <TableColumn fx:id="commentColumn" text="Comment" />
             <TableColumn fx:id="timestampColumn" text="Timestamp" />
+            <TableColumn fx:id="actionsColumn" text="Actions" />
         </columns>
     </TableView>
-    <Label fx:id="averageRatingLabel" text="Average Rating: 0.00" />
+
     <Button text="Back" onAction="#handleBack" />
 </VBox>

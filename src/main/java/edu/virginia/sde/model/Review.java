@@ -2,13 +2,16 @@ package edu.virginia.sde.model;
 
 import javafx.beans.property.*;
 
+import java.sql.Timestamp;
+
 public class Review {
     private final IntegerProperty reviewId;
     private final StringProperty username;
     private final IntegerProperty courseId;
     private final IntegerProperty rating;
     private final StringProperty comment;
-    private final StringProperty courseTitle; // New property for course title
+    private final StringProperty courseTitle;
+    private StringProperty timestamp = null;
 
     public Review(int reviewId, String username, int courseId, int rating, String comment, String courseTitle) {
         this.reviewId = new SimpleIntegerProperty(reviewId);
@@ -17,11 +20,21 @@ public class Review {
         this.rating = new SimpleIntegerProperty(rating);
         this.comment = new SimpleStringProperty(comment);
         this.courseTitle = new SimpleStringProperty(courseTitle);
+        this.timestamp = new SimpleStringProperty(new Timestamp(System.currentTimeMillis()).toString());
+
     }
 
     // Property getter for JavaFX bindings
     public StringProperty courseTitleProperty() {
         return courseTitle;
+    }
+
+    public StringProperty timestampProperty() {
+        return timestamp;
+    }
+
+    public String getTimestamp() {
+        return timestamp.get();
     }
 
     public String getCourseTitle() {
