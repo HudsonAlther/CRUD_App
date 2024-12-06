@@ -35,8 +35,6 @@ public class ReviewServiceImpl implements ReviewService {
                     int rating = rs.getInt("rating");
                     String comment = rs.getString("comment");
                     String courseTitle = rs.getString("title");
-
-                    // Use the constructor to include the `reviewId`
                     Review review = new Review(
                             reviewId,
                             username,
@@ -233,6 +231,43 @@ public class ReviewServiceImpl implements ReviewService {
         // Create the Review object
         return new Review(reviewId, username, courseId, rating, comment, courseTitle);
     }
+
+    @Override
+    public List<Review> getReviewsByCourseId(int courseId) {
+        List<Review> courseReviews = new ArrayList<>();
+        String query = "SELECT r.id, r.rating, r.comment, r.timestamp, u.username, c.title " +
+                "FROM Reviews r " +
+                "JOIN Users u ON r.user_id = u.id " +
+                "JOIN Courses c ON r.course_id = c.id " +
+                "WHERE c.id = ?";
+        try (Connection conn = DatabaseInitializer.getConnection()) {
+            assert conn != null;
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+
+                stmt.setInt(1, courseId);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        // Extract review details
+                        int reviewId = rs.getInt("id");
+                        String username = rs.getString("username");
+                        int rating = rs.getInt("rating");
+                        String comment = rs.getString("comment");
+                        String courseTitle = rs.getString("title");
+
+                        // Create a Review object
+                        Review review = new Review(reviewId, username, courseId, rating, comment, courseTitle);
+                        courseReviews.add(review);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[ERROR] Failed to fetch reviews by course ID: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return courseReviews;
+    }
+
 
 
 

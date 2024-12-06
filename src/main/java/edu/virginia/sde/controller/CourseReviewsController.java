@@ -1,4 +1,4 @@
-package edu.virginia.sde.reviews;
+package edu.virginia.sde.controller;
 
 import edu.virginia.sde.model.Course;
 import edu.virginia.sde.model.Review;

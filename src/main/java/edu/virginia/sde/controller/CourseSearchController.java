@@ -1,11 +1,10 @@
 package edu.virginia.sde.controller;
 
 import edu.virginia.sde.model.Course;
-import edu.virginia.sde.managers.SessionManager;
 import edu.virginia.sde.service.CourseService;
 import edu.virginia.sde.service.CourseServiceImpl;
-import edu.virginia.sde.service.ReviewServiceImpl;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -13,9 +12,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import javafx.event.ActionEvent;
+import javafx.util.Callback;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 public class CourseSearchController {
@@ -33,9 +33,6 @@ public class CourseSearchController {
     private TextField searchField;
 
     @FXML
-    private Button searchButton;
-
-    @FXML
     private TableView<Course> courseTable;
 
     @FXML
@@ -50,9 +47,11 @@ public class CourseSearchController {
     @FXML
     private TableColumn<Course, Double> ratingColumn;
 
-    private String username;
-
     private final CourseService courseService = new CourseServiceImpl();
+    @FXML
+    private TableColumn<Course, Void> viewReviewsColumn = new TableColumn<>("Reviews");
+
+    private String username;
 
     @FXML
     public void initialize() {
@@ -62,7 +61,89 @@ public class CourseSearchController {
         titleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         ratingColumn.setCellValueFactory(cellData -> cellData.getValue().averageRatingProperty().asObject());
 
+        addViewReviewsButtonToTable();
+
         refreshCourseTable();
+    }
+
+    private void addViewReviewsButtonToTable() {
+        Callback<TableColumn<Course, Void>, TableCell<Course, Void>> cellFactory = new Callback<>() {
+            @Override
+            public TableCell<Course, Void> call(final TableColumn<Course, Void> param) {
+                return new TableCell<>() {
+                    private final Button btn = new Button("View Reviews");
+
+                    {
+                        btn.setOnAction((ActionEvent event) -> {
+                            Course course = getTableView().getItems().get(getIndex());
+                            handleViewReviews(course);
+                        });
+                    }
+
+                    @Override
+                    public void updateItem(Void item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            setGraphic(btn);
+                        }
+                    }
+                };
+            }
+        };
+
+        viewReviewsColumn.setCellFactory(cellFactory);
+    }
+
+
+
+
+    private void handleViewReviews(Course course) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseReviewsView.fxml"));
+
+            // Debugging output for FXML resource loading
+            URL resource = getClass().getResource("/edu/virginia/sde/reviews/CourseReviewsView.fxml");
+            if (resource == null) {
+                System.err.println("[ERROR] Could not locate CourseReviewsView.fxml!");
+                return;
+            } else {
+                System.out.println("[INFO] Loading FXML file from: " + resource);
+            }
+            Parent root = loader.load();
+            edu.virginia.sde.reviews.CourseReviewsController controller = loader.getController();
+            if (controller != null) {
+                controller.setCourse(course);
+            } else {
+                throw new IllegalStateException("CourseReviewsController could not be initialized properly.");
+            }
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Reviews for " + course.getTitle());
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to load the Course Reviews screen. Please check the FXML path and content.");
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to initialize the Course Reviews screen properly.");
+        }
+    }
+
+
+    public void handleViewReviews(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseReviewsView.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Course Reviews");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to load the Course Reviews screen.");
+        }
     }
 
     @FXML
@@ -103,11 +184,17 @@ public class CourseSearchController {
         }
     }
 
+    @FXML
     public void handleMyReviews(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/MyReviewsView.fxml"));
             Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            // Assuming MyReviewsController has a setUsername() method
+            MyReviewsController controller = loader.getController();
+            controller.setUsername(username);
+
+            Stage stage = new Stage();
             stage.setScene(new Scene(root));
             stage.setTitle("My Reviews");
             stage.show();
@@ -116,10 +203,6 @@ public class CourseSearchController {
             showAlert("Error", "Failed to load the My Reviews screen.");
         }
     }
-
-
-
-
 
     @FXML
     public void handleLogout(ActionEvent event) {
@@ -172,5 +255,4 @@ public class CourseSearchController {
             showAlert("Error", "Failed to load the Write Review screen.");
         }
     }
-
 }

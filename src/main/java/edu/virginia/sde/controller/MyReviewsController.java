@@ -6,6 +6,7 @@ import edu.virginia.sde.service.ReviewService;
 import edu.virginia.sde.service.ReviewServiceImpl;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -32,6 +33,7 @@ public class MyReviewsController {
     private TableColumn<Review, String> commentColumn;
 
     private ReviewService reviewService = new ReviewServiceImpl();
+    private String username;
 
     @FXML
     public void initialize() {
@@ -162,6 +164,29 @@ public class MyReviewsController {
         } catch (IOException e) {
             e.printStackTrace();
             showAlert("Error", "Failed to navigate back to the Course Search screen.");
+        }
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+
+        if (username == null || username.isEmpty()) {
+            showAlert("Error", "Username cannot be null or empty.");
+            return;
+        }
+
+        System.out.println("[DEBUG] Fetching reviews for user: " + username);
+
+        // Fetch the reviews for the specified user
+        List<Review> reviews = reviewService.getReviewsByUser(username);
+
+        if (reviews != null) {
+            ObservableList<Review> reviewList = FXCollections.observableArrayList(reviews);
+            reviewsTable.setItems(reviewList);
+            System.out.println("[DEBUG] Number of reviews fetched for " + username + ": " + reviews.size());
+        } else {
+            System.out.println("[DEBUG] No reviews found for user: " + username);
+            reviewsTable.setItems(FXCollections.observableArrayList());
         }
     }
 

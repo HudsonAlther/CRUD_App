@@ -21,6 +21,7 @@
             <TableColumn fx:id="numberColumn" text="Number" />
             <TableColumn fx:id="titleColumn" text="Title" />
             <TableColumn fx:id="ratingColumn" text="Average Rating" />
+            <TableColumn fx:id="viewReviewsColumn" text="Reviews" />
         </columns>
     </TableView>
 
@@ -29,5 +30,6 @@
         <Button fx:id="myReviewsButton" text="My Reviews" onAction="#handleMyReviews" />
         <Button fx:id="logoutButton" text="Log Out" onAction="#handleLogout" />
         <Button fx:id="writeReviewButton" text="Write Review" onAction="#handleWriteReview" />
+        <Button fx:id="viewReviewsButton" text="View Reviews" onAction="#handleViewReviews" />
     </HBox>
 </VBox>

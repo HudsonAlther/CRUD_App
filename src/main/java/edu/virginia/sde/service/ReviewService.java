@@ -15,4 +15,5 @@ public interface ReviewService {
     boolean deleteReview(int reviewId, String username);
 
     Optional<Review> getReviewById(int reviewId);
+    public List<Review> getReviewsByCourseId(int courseId);
 }
