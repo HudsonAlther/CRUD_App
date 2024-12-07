@@ -145,12 +145,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             stmt.setInt(1, reviewId);
             stmt.setString(2, username);
-
-            System.out.println("[DEBUG] Executing query: " + stmt);
-
             int rowsAffected = stmt.executeUpdate();
-            System.out.println("[DEBUG] Rows affected: " + rowsAffected);
-
             return rowsAffected > 0;
 
         } catch (SQLException e) {

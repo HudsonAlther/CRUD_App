@@ -1,113 +1,81 @@
 package edu.virginia.sde.controller;
 
-import edu.virginia.sde.service.UserService;
-import edu.virginia.sde.managers.*;
-import edu.virginia.sde.service.UserServiceImpl;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import java.io.IOException;
 
 public class LoginController {
 
-    @FXML
-    private TextField usernameField;
+    @FXML private TextField usernameField;
+    @FXML private PasswordField passwordField;
 
     @FXML
-    private PasswordField passwordField;
-
-    private UserService userService;
-
-    public LoginController() {
-        this.userService = new UserServiceImpl();
-    }
-
-    @FXML
-    public void handleLogin(ActionEvent event) {
-        String username = usernameField.getText().trim();
-        String password = passwordField.getText().trim();
+    private void handleLogin(ActionEvent event) {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Username or password cannot be empty.");
+            showAlert("Error", "Please enter both username and password.");
             return;
         }
-
-        if (userService.validateUser(username, password)) {
-            // Set the username in SessionManager
-            SessionManager.setUsername(username);
-            System.out.println("[DEBUG] Username set in SessionManager: " + SessionManager.getUsername());
-
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
-                Parent root = loader.load();
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.setScene(new Scene(root));
-                stage.setTitle("Course Search");
-                stage.show();
-            } catch (IOException e) {
-                e.printStackTrace();
-                showAlert("Error", "Failed to load the Course Search screen.");
-            }
+        if (username.equals("admin") && password.equals("password")) {
+            showAlert("Success", "Login successful!");
         } else {
             showAlert("Error", "Invalid username or password.");
         }
     }
 
-
-
     @FXML
-    public void handleRegister(ActionEvent event) {
-        String username = usernameField.getText().trim();
-        String password = passwordField.getText().trim();
+    private void handleCreateUser(ActionEvent event) {
+        String password = passwordField.getText();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Username or password cannot be empty.");
+        // Validate the password length
+        if (!isValidPassword(password)) {
+            showAlert("Error", "Password must be at least 8 characters long.");
             return;
         }
 
-        if (userService.createUser(username, password)) {
-            showAlert("Success", "User registered successfully! Please log in.");
-        } else {
-            showAlert("Error", "Registration failed. Username may already exist.");
+        // Proceed to open the registration window if the password is valid
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/views/RegistrationView.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Create User");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to open the registration window.");
         }
+    }
+
+    // Utility method to validate the password
+    private boolean isValidPassword(String password) {
+        return password != null && password.length() >= 8;
+    }
+
+
+
+    @FXML
+    private void closeWindow(ActionEvent event) {
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.close();
     }
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
+        alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
     }
-
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
-    @FXML
-    public void handleCreateUser(ActionEvent event) {
-        String username = usernameField.getText();
-        String password = passwordField.getText();
-
-        if (username.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Username or password cannot be empty.");
-            return;
-        }
-
-        boolean isCreated = userService.createUser(username, password);
-        if (isCreated) {
-            showAlert("Success", "User created successfully! You can now log in.");
-            usernameField.clear();
-            passwordField.clear();
-        } else {
-            showAlert("Error", "Failed to create user. Username might already exist.");
-        }
-    }
-
 }

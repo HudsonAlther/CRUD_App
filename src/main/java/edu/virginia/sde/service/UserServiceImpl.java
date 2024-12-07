@@ -68,4 +68,22 @@ public class UserServiceImpl implements UserService {
         User user = getUser(username);
         return user != null && user.getPassword().equals(password);
     }
+
+    private final UserDao userDao = new UserDaoImpl();
+
+    @Override
+    public boolean registerUser(String username, String password) throws SQLException {
+        if (!isValidPassword(password)) {
+            return false;
+        }
+        if (userDao.userExists(username)) {
+            throw new SQLException("Username already exists", "23000");
+        }
+        return userDao.addUser(username, password);
+    }
+
+    @Override
+    public boolean isValidPassword(String password) {
+        return password != null && password.length() >= 8;
+    }
 }

@@ -157,21 +157,18 @@ public class MyReviewsController {
 
     public void setUsername(String username) {
         if (username == null || username.isEmpty()) {
-            System.out.println("[ERROR] Attempted to set empty or null username in MyReviewsController.");
+            System.out.println("Error, Attempted to set empty or null username in MyReviewsController.");
             return;
         }
 
         this.username = username;
-        System.out.println("[DEBUG] Fetching reviews for user: " + username);
 
         List<Review> reviews = reviewService.getReviewsByUser(username);
 
         if (reviews != null) {
             ObservableList<Review> reviewList = FXCollections.observableArrayList(reviews);
             reviewsTable.setItems(reviewList);
-            System.out.println("[DEBUG] Number of reviews fetched for " + username + ": " + reviews.size());
         } else {
-            System.out.println("[DEBUG] No reviews found for user: " + username);
             reviewsTable.setItems(FXCollections.observableArrayList());
         }
     }

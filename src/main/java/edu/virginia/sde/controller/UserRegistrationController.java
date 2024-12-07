@@ -14,6 +14,7 @@ import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class UserRegistrationController {
 
@@ -26,20 +27,38 @@ public class UserRegistrationController {
     private final UserService userService = new UserServiceImpl();
 
     @FXML
-    public void handleRegister(ActionEvent event) {
-        String username = usernameField.getText().trim();
-        String password = passwordField.getText().trim();
+    private void handleCreateUser(ActionEvent event) {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
             showAlert("Error", "Username and password cannot be empty.");
             return;
         }
 
-        if (userService.createUser(username, password)) {
-            showAlert("Success", "User registered successfully!");
-            clearFields();
+        if (!userService.isValidPassword(password)) {
+            showAlert("Error", "Password must be at least 8 characters long.");
+            return;
+        }
+
+        try {
+            boolean success = userService.registerUser(username, password);
+            if (success) {
+                showAlert("Success", "User created successfully!");
+                clearFields();
+            } else {
+                showAlert("Error", "Registration failed.");
+            }
+        } catch (SQLException e) {
+            handleSQLException(e);
+        }
+    }
+
+    private void handleSQLException(SQLException e) {
+        if ("23000".equals(e.getSQLState())) {
+            showAlert("Error", "Username already exists. Please choose a different username.");
         } else {
-            showAlert("Error", "Username already exists. Please try a different one.");
+            showAlert("Error", "A database error occurred: " + e.getMessage());
         }
     }
 
