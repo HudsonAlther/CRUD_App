@@ -3,6 +3,7 @@ package edu.virginia.sde.controller;
 import edu.virginia.sde.managers.SessionManager;
 import edu.virginia.sde.model.Review;
 import edu.virginia.sde.model.Course;
+import edu.virginia.sde.reviews.CourseReviewsController;
 import edu.virginia.sde.service.ReviewService;
 import edu.virginia.sde.service.ReviewServiceImpl;
 import edu.virginia.sde.service.CourseService;
@@ -38,6 +39,9 @@ public class WriteReviewController {
     private final CourseService courseService = new CourseServiceImpl();
 
     private String username;
+
+    private CourseReviewsController courseReviewsController;
+
 
     public void setUsername(String username) {
         this.username = username;
@@ -84,8 +88,15 @@ public class WriteReviewController {
                 showAlert("Success", "Review submitted successfully!");
                 ratingField.clear();
                 commentField.clear();
-                refresh();
-            } else {
+
+
+                if (courseReviewsController != null) {
+                    courseReviewsController.refreshReviews();
+                }
+
+                closeWindow();
+            }
+         else {
                 showAlert("Error", "Failed to submit review.");
             }
 
@@ -104,6 +115,14 @@ public class WriteReviewController {
         Stage stage = (Stage) courseComboBox.getScene().getWindow();
         stage.close();
     }
+    private boolean cameFromCourseReviews = false;
+
+    public void setCourseReviewsController(CourseReviewsController controller) {
+        this.courseReviewsController = controller;
+        this.cameFromCourseReviews = true;
+    }
+
+
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -124,18 +143,23 @@ public class WriteReviewController {
 
     @FXML
     private void handleBack(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
-            Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Course Search");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("Error", "Failed to navigate back to the Course Search screen.");
+        if (cameFromCourseReviews) {
+            closeWindow();
+        } else {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
+                Parent root = loader.load();
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new Scene(root));
+                stage.setTitle("Course Search");
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                showAlert("Error", "Failed to navigate back to the Course Search screen.");
+            }
         }
     }
+
 
 
 }

@@ -1,5 +1,6 @@
 package edu.virginia.sde.reviews;
 
+import edu.virginia.sde.controller.WriteReviewController;
 import edu.virginia.sde.managers.SessionManager;
 import edu.virginia.sde.model.Course;
 import edu.virginia.sde.model.Review;
@@ -126,7 +127,7 @@ public class CourseReviewsController {
         });
     }
 
-    private void refreshReviews() {
+    public void refreshReviews() {
         List<Review> reviewsList = reviewService.getReviewsByCourseId(courseId);
         reviewsTable.setItems(FXCollections.observableArrayList(reviewsList));
         updateAverageRating();
@@ -149,18 +150,11 @@ public class CourseReviewsController {
                 showAlert("Invalid Rating", "Rating must be between 1 and 5.");
                 return;
             }
-
             String comment = commentInput.getText();
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-
             Review newReview = new Review(0, currentUserId, 0, rating, comment, timestamp.toString());
-
-            // Remove existing review by the user
             reviews.removeIf(review -> review.getUsername().equals(currentUserId));
-
-            // Add new review
             reviews.add(newReview);
-
             reviewsTable.setItems(reviews);
             updateAverageRating();
             clearInputFields();
@@ -198,6 +192,25 @@ public class CourseReviewsController {
                 .orElse(0.0);
         averageRatingLabel.setText(String.format("Average Rating: %.2f", average));
     }
+
+    @FXML
+    private void handleWriteReview(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/WriteReviewView.fxml"));
+            Parent root = loader.load();
+            WriteReviewController writeReviewController = loader.getController();
+            writeReviewController.setUsername(SessionManager.getUsername());
+            writeReviewController.setCourseReviewsController(this);
+            Stage stage = new Stage();
+            stage.setTitle("Write Review");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to open the Write Review window.");
+        }
+    }
+
 
     private void setCourseDetails(String mnemonic, String number, String title) {
         titleLabel.setText(String.format("Course Reviews for %s %s: %s", mnemonic, number, title));

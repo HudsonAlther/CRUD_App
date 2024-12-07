@@ -16,4 +16,5 @@
     </TableView>
 
     <Button text="Back" onAction="#handleBack" />
+    <Button text="Write Review" onAction="#handleWriteReview" />
 </VBox>
