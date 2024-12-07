@@ -7,7 +7,7 @@
 
 ## To Run
 
-[Add a brief description of which .java file to run, and what vm arguments are needed]
+.\gradlew run
 
 ## Contributions
 
@@ -19,4 +19,4 @@ List the primary contributions of each author. It is recommended to update this 
 
 ## Issues
 
-None
+Issues with average ratings not updating and not truncating
