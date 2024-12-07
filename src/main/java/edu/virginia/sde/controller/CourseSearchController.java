@@ -58,9 +58,24 @@ public class CourseSearchController {
         numberColumn.setCellValueFactory(cellData -> cellData.getValue().numberProperty().asObject());
         titleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         ratingColumn.setCellValueFactory(cellData -> cellData.getValue().averageRatingProperty().asObject());
+
+        // Truncate the average rating to two decimal places
+        ratingColumn.setCellFactory(column -> new TableCell<Course, Double>() {
+            @Override
+            protected void updateItem(Double rating, boolean empty) {
+                super.updateItem(rating, empty);
+                if (empty || rating == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f", rating));
+                }
+            }
+        });
+
         addViewReviewsButtonToTable();
         refreshCourseTable();
     }
+
 
 
     private void addViewReviewsButtonToTable() {
