@@ -70,13 +70,24 @@ public class CourseReviewsController {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    HBox buttons = new HBox(5, editButton, deleteButton);
-                    setGraphic(buttons);
+                    Review review = getTableRow().getItem();
+                    if (review != null && review.getUsername().equals(SessionManager.getUsername())) {
+                        HBox buttons = new HBox(5, editButton, deleteButton);
+                        setGraphic(buttons);
+                    } else {
+                        setGraphic(null);
+                    }
                 }
             }
         });
     }
+
     private void handleEdit(Review review) {
+        if (!review.getUsername().equals(SessionManager.getUsername())) {
+            showAlert("Error", "You can only edit your own reviews.");
+            return;
+        }
+
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Edit Review");
         dialog.setHeaderText("Edit your review for " + review.getCourseTitle());
@@ -113,7 +124,13 @@ public class CourseReviewsController {
             }
         });
     }
+
     private void handleDelete(Review review) {
+        if (!review.getUsername().equals(SessionManager.getUsername())) {
+            showAlert("Error", "You can only delete your own reviews.");
+            return;
+        }
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this review?");
         confirm.setHeaderText("Delete Review");
         confirm.showAndWait().ifPresent(response -> {
@@ -126,6 +143,7 @@ public class CourseReviewsController {
             }
         });
     }
+
 
     public void refreshReviews() {
         List<Review> reviewsList = reviewService.getReviewsByCourseId(courseId);

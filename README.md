@@ -19,8 +19,7 @@ List the primary contributions of each author. It is recommended to update this 
 
 ## Issues
 
-Issues with average ratings not updating and not truncating
-
+Issues with time stamps 
 
 
 
