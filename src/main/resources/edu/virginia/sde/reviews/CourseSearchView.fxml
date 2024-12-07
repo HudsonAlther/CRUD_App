@@ -29,6 +29,5 @@
         <Button fx:id="addCourseButton" text="Add Course" onAction="#handleAddCourse" />
         <Button fx:id="myReviewsButton" text="My Reviews" onAction="#handleMyReviews" />
         <Button fx:id="logoutButton" text="Log Out" onAction="#handleLogout" />
-        <Button fx:id="writeReviewButton" text="Write Review" onAction="#handleWriteReview" />
     </HBox>
 </VBox>
