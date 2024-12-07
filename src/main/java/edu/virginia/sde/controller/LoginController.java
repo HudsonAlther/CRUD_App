@@ -1,6 +1,7 @@
 package edu.virginia.sde.controller;
 
 import edu.virginia.sde.database.DatabaseInitializer;
+import edu.virginia.sde.managers.SessionManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,6 +29,7 @@ public class LoginController {
     private void handleLogin(ActionEvent event) {
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
+        SessionManager.setUsername(username);
 
         if (username.isEmpty() || password.isEmpty()) {
             showAlert("Error", "Please enter both username and password.");
@@ -47,8 +49,6 @@ public class LoginController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/virginia/sde/reviews/CourseSearchView.fxml"));
             Parent root = loader.load();
-
-            // Pass the username to the CourseSearchController
             CourseSearchController controller = loader.getController();
             controller.setUsername(username);
 

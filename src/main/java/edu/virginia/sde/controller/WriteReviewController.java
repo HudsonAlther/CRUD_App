@@ -49,18 +49,26 @@ public class WriteReviewController {
 
     @FXML
     public void initialize() {
-        var courses = courseService.getAllCourses();
-        if (courses.isEmpty()) {
-            showAlert("Error", "No courses available to review.");
-        }
-        courseComboBox.setItems(FXCollections.observableArrayList(courses));
-        ratingField.setTextFormatter(new TextFormatter<>(change -> {
-            if (change.getText().matches("[0-9]*")) {
-                return change;
+        try {
+            var courses = courseService.getAllCourses();
+            if (courses == null || courses.isEmpty()) {
+                showAlert("Error", "No courses available to review.");
+                return;
             }
-            return null;
-        }));
+            courseComboBox.setItems(FXCollections.observableArrayList(courses));
+
+            ratingField.setTextFormatter(new TextFormatter<>(change -> {
+                if (change.getControlNewText().matches("[0-9]{0,1}")) {
+                    return change;
+                }
+                return null;
+            }));
+        } catch (Exception e) {
+            showAlert("Error", "Failed to load courses.");
+            e.printStackTrace();
+        }
     }
+
 
 
     @FXML
@@ -74,6 +82,12 @@ public class WriteReviewController {
             return;
         }
 
+        String username = SessionManager.getUsername();
+        if (username == null || username.isEmpty()) {
+            showAlert("Error", "You must be logged in to submit a review.");
+            return;
+        }
+
         try {
             int rating = Integer.parseInt(ratingText);
             if (rating < 1 || rating > 5) {
@@ -81,7 +95,7 @@ public class WriteReviewController {
                 return;
             }
 
-            Review review = new Review(0, SessionManager.getUsername(), selectedCourse.getId(), rating, comment, selectedCourse.getTitle());
+            Review review = new Review(0, username, selectedCourse.getId(), rating, comment, selectedCourse.getTitle());
             boolean success = reviewService.addReview(review);
 
             if (success) {
@@ -89,14 +103,12 @@ public class WriteReviewController {
                 ratingField.clear();
                 commentField.clear();
 
-
                 if (courseReviewsController != null) {
                     courseReviewsController.refreshReviews();
                 }
 
                 closeWindow();
-            }
-         else {
+            } else {
                 showAlert("Error", "Failed to submit review.");
             }
 
@@ -104,6 +116,7 @@ public class WriteReviewController {
             showAlert("Error", "Rating must be a valid number.");
         }
     }
+
 
 
     @FXML
