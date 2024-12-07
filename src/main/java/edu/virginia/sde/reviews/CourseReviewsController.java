@@ -147,9 +147,11 @@ public class CourseReviewsController {
 
     public void refreshReviews() {
         List<Review> reviewsList = reviewService.getReviewsByCourseId(courseId);
-        reviewsTable.setItems(FXCollections.observableArrayList(reviewsList));
+        reviews = FXCollections.observableArrayList(reviewsList);
+        reviewsTable.setItems(reviews);
         updateAverageRating();
     }
+
 
 
 
@@ -204,12 +206,17 @@ public class CourseReviewsController {
     }
 
     private void updateAverageRating() {
+        System.out.println("Calculating average rating from the following ratings:");
+        reviews.forEach(review -> System.out.println(review.getRating()));
+
         double average = reviews.stream()
                 .mapToInt(Review::getRating)
                 .average()
                 .orElse(0.0);
+
         averageRatingLabel.setText(String.format("Average Rating: %.2f", average));
     }
+
 
     @FXML
     private void handleWriteReview(ActionEvent event) {

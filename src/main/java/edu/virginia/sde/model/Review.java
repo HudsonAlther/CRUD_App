@@ -86,6 +86,9 @@ public class Review {
         return courseId.get();
     }
 
+
+
+
     public void setCourseId(int courseId) {
         this.courseId.set(courseId);
     }

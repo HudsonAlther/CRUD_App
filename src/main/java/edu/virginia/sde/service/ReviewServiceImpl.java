@@ -79,6 +79,27 @@ public class ReviewServiceImpl implements ReviewService {
         }
         return reviews;
     }
+    @Override
+    public boolean hasUserReviewedCourse(String username, int courseId) {
+        String query = "SELECT COUNT(*) FROM Reviews WHERE user_id = ? AND course_id = ?";
+        try (Connection conn = DatabaseInitializer.getConnection()) {
+            assert conn != null;
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+
+                stmt.setString(1, username);
+                stmt.setInt(2, courseId);
+
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
     @Override
     public List<Review> searchReviews(String keyword) {

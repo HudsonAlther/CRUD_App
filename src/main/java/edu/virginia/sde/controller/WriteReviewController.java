@@ -88,6 +88,12 @@ public class WriteReviewController {
             return;
         }
 
+
+        if (reviewService.hasUserReviewedCourse(username, selectedCourse.getId())) {
+            showAlert("Error", "You have already submitted a review for this course.");
+            return;
+        }
+
         try {
             int rating = Integer.parseInt(ratingText);
             if (rating < 1 || rating > 5) {
@@ -116,8 +122,6 @@ public class WriteReviewController {
             showAlert("Error", "Rating must be a valid number.");
         }
     }
-
-
 
     @FXML
     public void handleCancel() {

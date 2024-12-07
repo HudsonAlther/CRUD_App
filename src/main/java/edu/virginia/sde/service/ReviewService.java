@@ -16,4 +16,5 @@ public interface ReviewService {
 
     Optional<Review> getReviewById(int reviewId);
     public List<Review> getReviewsByCourseId(int courseId);
+    boolean hasUserReviewedCourse(String username, int courseId);
 }

@@ -32,12 +32,10 @@ public class UserServiceImpl implements UserService {
         String insertQuery = "INSERT INTO Users (username, password) VALUES (?, ?)";
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
-
-            // Insert new user
             insertStmt.setString(1, username);
             insertStmt.setString(2, password);
             insertStmt.executeUpdate();
-            return true; // User created successfully
+            return true;
 
         } catch (SQLException e) {
             System.err.println("SQL Error during createUser: " + e.getMessage()); // Added more detailed logging
